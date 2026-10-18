@@ -34,6 +34,9 @@
   --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
   --r:8px; --shadow:0 10px 30px rgba(20,24,28,.12),0 2px 6px rgba(20,24,28,.06);
 }
+:root{--c-red:#B83A3A; --s-red:#F6DEDE; --c-orange:#C76A12; --s-orange:#F8E6D2; --c-mustard:#8C7A0E; --s-mustard:#F2EDCF; --c-olive:#6B7A1E; --s-olive:#ECEFD6; --c-sky:#1C7FA6; --s-sky:#DAEEF6; --c-navy:#2D3F8C; --s-navy:#DFE3F3; --c-purple:#8443B0; --s-purple:#EEE2F5; --c-plum:#8C3A6E; --s-plum:#F2E0EB; --c-pink:#D35C8E; --s-pink:#FBE3EE; --c-brown:#7A5235; --s-brown:#EEE4DC; --c-sand:#8F7A5A; --s-sand:#EFEAE1; --c-charcoal:#33363B; --s-charcoal:#E2E3E5;}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--c-red:#E57373; --s-red:#3F2222; --c-orange:#E89A4F; --s-orange:#3F2C1A; --c-mustard:#D3BE4A; --s-mustard:#3A3519; --c-olive:#B3C25A; --s-olive:#2F3519; --c-sky:#5DBCE0; --s-sky:#1A3540; --c-navy:#8A9BE6; --s-navy:#232A48; --c-purple:#C08AE6; --s-purple:#35264A; --c-plum:#D68ABA; --s-plum:#3D2235; --c-pink:#F08DB5; --s-pink:#45253A; --c-brown:#C99A78; --s-brown:#3A2C22; --c-sand:#CDBB98; --s-sand:#37322A; --c-charcoal:#C4C8CE; --s-charcoal:#2E3236;}}
+:root[data-theme="dark"]{--c-red:#E57373; --s-red:#3F2222; --c-orange:#E89A4F; --s-orange:#3F2C1A; --c-mustard:#D3BE4A; --s-mustard:#3A3519; --c-olive:#B3C25A; --s-olive:#2F3519; --c-sky:#5DBCE0; --s-sky:#1A3540; --c-navy:#8A9BE6; --s-navy:#232A48; --c-purple:#C08AE6; --s-purple:#35264A; --c-plum:#D68ABA; --s-plum:#3D2235; --c-pink:#F08DB5; --s-pink:#45253A; --c-brown:#C99A78; --s-brown:#3A2C22; --c-sand:#CDBB98; --s-sand:#37322A; --c-charcoal:#C4C8CE; --s-charcoal:#2E3236;}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#15181B; --side:#1B1F22; --surface:#1F2327; --surface-2:#272C31; --hover:rgba(232,234,230,.07);
   --line:#2D3338; --line-2:#3B4248; --ink:#E7E9E5; --ink-2:#B4B9B3; --ink-3:#868C88;
@@ -350,6 +353,29 @@ button.tchip:hover{filter:brightness(.97)}
 .task .chk:focus-visible,.sub .chk:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
 /* prompt cards */
+.swgrid{display:grid;grid-template-columns:repeat(5,32px);gap:8px;padding:8px}
+.swb{width:32px;height:32px;border-radius:50%;border:0;transition:transform .1s}
+.swb:hover{transform:scale(1.1)}
+.swb.on{box-shadow:0 0 0 3px var(--surface),0 0 0 5px var(--ring)}
+.ce-list .swgrid{grid-template-columns:repeat(10,minmax(0,32px));margin:2px 0 6px 6px;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:12px;justify-content:start}
+@media (max-width:560px){.ce-list .swgrid{grid-template-columns:repeat(5,32px)}}
+.ce-list{display:flex;flex-direction:column;gap:6px}
+.ce-row{display:flex;align-items:center;gap:6px}
+.ce-row .field{flex:1;min-width:0}
+.ce-dot{width:20px;height:20px;border-radius:50%;display:block}
+.ce-n{font-size:12.5px;color:var(--ink-3);white-space:nowrap;min-width:64px;text-align:right}
+.ce-sure{font-size:12px;color:var(--danger);font-weight:600}
+.pg-top{display:flex;flex-direction:column;gap:12px;margin-bottom:18px}
+.pg-srow{display:flex;gap:8px;align-items:center}
+.pg-sbox{position:relative;flex:1;min-width:0}
+.pg-sbox>.ic{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--ink-3);pointer-events:none;display:flex}
+.pg-q{padding-left:40px;height:42px;font-size:15px}
+.pg-chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pg-chips .pm-chip{display:inline-flex;align-items:center;gap:7px}
+.pg-dot{width:9px;height:9px;border-radius:50%}
+.pg-cnt{margin-left:auto;font-size:13px;color:var(--ink-3)}
+.pg-none{border:1.5px dashed var(--line-2);border-radius:14px;padding:36px;text-align:center;color:var(--ink-2);margin-bottom:16px}
+.pcard[hidden]{display:none}
 .pgal{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,270px),1fr));gap:16px}
 .pcard{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;min-width:0}
 .pband{height:60px;display:flex;align-items:flex-end;padding:0 16px 9px;font-size:12.5px;font-weight:600}
@@ -456,6 +482,12 @@ table.st{border-collapse:collapse;font-size:14.5px}
 .share-bar .sb-st{font-size:12.5px;opacity:.85;white-space:nowrap}
 .shared-ro .g,.shared-ro .page-acts,.shared-ro .tbl-addc,.shared-ro .tbl-addr,.shared-ro .dtools,.shared-ro .dres,.shared-ro .ihandle,.shared-ro .lcard .icon-btn,.shared-ro .place .btn,.shared-ro .page-icon{pointer-events:none}
 .shared-ro .g{visibility:hidden}
+.shared-ro .pg-edit,.shared-ro .pnew{display:none}
+.blk.conflict{background:color-mix(in srgb,var(--c-amber) 13%,transparent);box-shadow:inset 3px 0 0 var(--c-amber);border-radius:6px;padding-bottom:6px;margin-top:3px;margin-bottom:3px;flex-wrap:wrap}
+.cbar{display:flex;align-items:center;gap:10px;flex-basis:100%;padding:2px 0 0 calc(var(--gw,0px) + 10px);font-size:12.5px;color:var(--ink-2)}
+.cbar .btn.sm{height:26px;padding:0 10px;font-size:12.5px;gap:4px}
+.shared-ro .cbar .btn{display:none}
+
 .shared-ro .page-acts,.shared-ro .tbl-addc,.shared-ro .tbl-addr,.shared-ro .dtools,.shared-ro .dres,.shared-ro .ihandle,.shared-ro .lcard .icon-btn{display:none}
 .shared-ro .dcan{pointer-events:none;cursor:default}
 
@@ -845,7 +877,11 @@ const fmtLong=s=>parseYmd(s).toLocaleDateString('en-GB',{weekday:'long',day:'num
 const fmtShort=s=>parseYmd(s).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
 const fmtMonth=s=>parseYmd(s).toLocaleDateString('en-GB',{month:'long',year:'numeric'});
 function ago(t){const s=(Date.now()-t)/1000; if(s<60)return 'just now'; if(s<3600)return Math.floor(s/60)+' min ago'; if(s<86400)return Math.floor(s/3600)+' h ago'; const d=Math.floor(s/86400); return d===1?'yesterday':d+' days ago';}
-const COLORS=['teal','coral','violet','blue','rose','slate','amber','green'];
+const COLORS=['teal','coral','violet','blue','rose','slate','amber','green','red','orange','mustard','olive','sky','navy','purple','plum','pink','brown','sand','charcoal'];
+const PALETTE=['red','coral','orange','amber','mustard','olive','green','teal','sky','blue','navy','violet','purple','plum','rose','pink','brown','sand','slate','charcoal'];
+const cap=x=>x[0].toUpperCase()+x.slice(1);
+/* the 20 colours as a grid of round buttons; soft=true shows the light tint (page covers) */
+function swatchGrid(cur,pick,soft){ return h('div',{class:'swgrid',role:'group','aria-label':'Colours'},PALETTE.map(c=>h('button',{class:'swb'+(c===cur?' on':''),'aria-label':cap(c),'aria-pressed':String(c===cur),title:cap(c),style:{background:`var(--${soft?'s':'c'}-${c})`,'--ring':`var(--c-${c})`},onclick:()=>pick(c)}))); }
 const DRAW_COLORS=['ink','#D2603A','#3A7BC8','#249079','#C7901F'];
 const MOODS=[{k:'happy',l:'Happy',c:'amber'},{k:'calm',l:'Calm',c:'blue'},{k:'excited',l:'Excited',c:'coral'},{k:'tired',l:'Tired',c:'slate'},{k:'sad',l:'Sad',c:'rose'}];
 const JOURNAL='sp-journal';
@@ -994,10 +1030,64 @@ let autoDepth=0;
 /* run automatic housekeeping without making anything look newer */
 function auto(fn){ if(SY.metaLoaded&&autoDepth===0) detectChanges(false); autoDepth++; try{ return fn(); } finally{ autoDepth--; if(autoDepth===0&&SY.metaLoaded) detectChanges(true); } }
 function kindOfId(id){ return id.startsWith('p:')?'page':id.startsWith('t:')?'task':id.startsWith('r:')?'recur':id; }
+/* ---- paragraph-level merge: combine two people's edits of the same page ---- */
+let SYBASE={}, baseT=null;   // the last cloud version of each page this device saw (the common starting point)
+async function baseLoad(){ try{ const d=await idb(); SYBASE=await new Promise(res=>{ const q=d.transaction('kv').objectStore('kv').get('syncbase'); q.onsuccess=()=>res(q.result||{}); q.onerror=()=>res({}); }); }catch(e){ SYBASE={}; } }
+function baseSave(){ clearTimeout(baseT); baseT=setTimeout(async()=>{ try{ const d=await idb(); d.transaction('kv','readwrite').objectStore('kv').put(SYBASE,'syncbase'); }catch(e){} },400); }
+function replaceIn(target,src){ Object.keys(target).forEach(k=>delete target[k]); Object.assign(target,src); }
+function cl(o){ return o==null?o:JSON.parse(JSON.stringify(o)); }
+function eqJ(a,b){ return JSON.stringify(a)===JSON.stringify(b); }
+/* base = the version both sides started from, mine = this device, theirs = the cloud.
+   Different paragraphs: both changes kept. Same paragraph changed differently: both versions kept, marked. */
+function merge3(base,mine,theirs){
+  base=base||{}; const out=cl(theirs); let conflicts=0;
+  new Set([...Object.keys(base),...Object.keys(mine),...Object.keys(theirs)]).forEach(k=>{
+    if(k==='blocks'||k==='updated') return;
+    if(!eqJ(mine[k],base[k])){ if(mine[k]===undefined) delete out[k]; else out[k]=cl(mine[k]); } });   // I changed it -> mine
+  out.updated=Math.max(mine.updated||0,theirs.updated||0);
+  const B=new Map((base.blocks||[]).map(x=>[x.id,x])), Mi=new Map((mine.blocks||[]).map(x=>[x.id,x]));
+  const res=[], copyOf={};
+  (theirs.blocks||[]).forEach(t=>{ const b=B.get(t.id), m=Mi.get(t.id);
+    if(!m){ if(!b||!eqJ(b,t)) res.push(cl(t)); return; }          // they added it / I deleted but they changed it -> keep; I deleted, untouched -> gone
+    if(eqJ(m,t)||(b&&eqJ(m,b))){ res.push(cl(t)); return; }       // same, or only they changed it
+    if(b&&eqJ(t,b)){ res.push(cl(m)); return; }                   // only I changed it
+    const g=uid(); const tc=cl(t), mc=cl(m); tc.conflict=g; mc.conflict=g; mc.id=uid(); copyOf[t.id]=mc.id;   // both changed it
+    res.push(tc,mc); conflicts++; });
+  let prev=null; const inRes=id=>res.some(x=>x.id===id);
+  (mine.blocks||[]).forEach(m=>{
+    if(inRes(m.id)){ prev=copyOf[m.id]||m.id; return; }
+    const b=B.get(m.id);
+    if(b&&eqJ(b,m)) return;                                       // they deleted it and I didn't change it
+    const at=prev?res.findIndex(x=>x.id===prev)+1:0; res.splice(at,0,cl(m)); prev=m.id; });
+  out.blocks=res;
+  return {page:out,conflicts};
+}
+SY.lastType=0; SY.composing=false;
+document.addEventListener('input',()=>{ SY.lastType=Date.now(); },true);
+document.addEventListener('compositionstart',()=>{ SY.composing=true; },true);
+document.addEventListener('compositionend',()=>{ SY.composing=false; SY.lastType=Date.now(); },true);
+function typedRecently(){ return SY.composing||Date.now()-SY.lastType<2500; }
+function onPage(pid){ return R.v==='page'&&R.id===pid; }
+const EDSEL='[contenteditable="true"],[contenteditable="plaintext-only"],input,textarea,select';
+function caretSave(){
+  const a=document.activeElement, v=$('#view'); if(!a||!v||!v.contains(a)) return null;
+  const row=a.closest('[data-id]'); const scope=row||v; let off=null;
+  if(a.isContentEditable){ const s=getSelection(); if(s.rangeCount&&a.contains(s.getRangeAt(0).startContainer)){ const r=document.createRange(); r.selectNodeContents(a); r.setEnd(s.getRangeAt(0).startContainer,s.getRangeAt(0).startOffset); off=r.toString().length; } }
+  else { try{ off=a.selectionStart; }catch(e){} }
+  return {bid:row?row.dataset.id:null,idx:[...scope.querySelectorAll(EDSEL)].indexOf(a),off};
+}
+function caretRestore(c){
+  if(!c||c.idx<0) return; const v=$('#view'); const scope=c.bid?v.querySelector('[data-id="'+c.bid+'"]'):v; if(!scope) return;
+  const el=scope.querySelectorAll(EDSEL)[c.idx]; if(!el) return;
+  try{ el.focus({preventScroll:true}); if(c.off!=null){ if(el.isContentEditable) setCaret(el,c.off); else el.setSelectionRange(c.off,c.off); } }catch(e){}
+}
+/* redraw the open page with new data from the cloud, keeping the cursor where it was */
+function renderKeepCaret(){ const v=$('#view'), sc=v.scrollTop, c=caretSave(); SY.needsRender=false; renderView(); v.scrollTop=sc; caretRestore(c); renderSidebar(); }
+function keepVersion(p,b){ const g=b.conflict; p.blocks=p.blocks.filter(x=>x===b||x.conflict!==g); delete b.conflict; touch(p); fillBlocks(p); toast('Kept this version'); }
 function applyRemote(row){
   const id=row.id, kind=row.kind||kindOfId(id), del=!!row.deleted, data=row.data;
   const replaceIn=(target,src)=>{ Object.keys(target).forEach(k=>delete target[k]); Object.assign(target,src); };
-  if(kind==='page'){ const pid=id.slice(2); if(del){ delete S.pages[pid]; } else if(S.pages[pid]) replaceIn(S.pages[pid],data); else S.pages[pid]=data; }
+  if(kind==='page'){ const pid=id.slice(2); if(del){ delete S.pages[pid]; delete SYBASE[pid]; } else { if(S.pages[pid]) replaceIn(S.pages[pid],data); else S.pages[pid]=data; SYBASE[pid]=cl(data); } baseSave(); if(onPage(pid)) SY.curTouched=true; }
   else if(kind==='task'||kind==='recur'){ const L=kind==='task'?tasks():recurs(); const xid=id.slice(2); const i=L.findIndex(x=>x.id===xid); if(del){ if(i>=0) L.splice(i,1); } else if(i>=0) replaceIn(L[i],data); else L.push(data); }
   else if(kind==='spaces'){ if(!del&&Array.isArray(data)) S.spaces.splice(0,S.spaces.length,...data); }
   else if(kind==='settings'){ if(!del&&data&&data.name) S.settings.name=data.name; }
@@ -1012,12 +1102,18 @@ function takeRemote(row){
   const id=row.id, m=SY.meta.rec[id];
   if(m&&row.updated<=(m.b||0)) return false;              // we already have this cloud version (or newer base)
   if(!m||!m.d){                                             // no unsent changes here -> just take the cloud version
-    if(id.startsWith('p:')&&R.v==='page'&&R.id===id.slice(2)&&editingNow()){ SY.deferred[id]=row; return false; }
+    if(id.startsWith('p:')&&onPage(id.slice(2))&&typedRecently()){ SY.deferred[id]=row; return false; }
     applyRemote(row); delete SY.deferred[id]; return true; }
   // both sides changed since the last sync
   if(id.startsWith('p:')){
-    const mine=S.pages[id.slice(2)];
-    if(R.v==='page'&&R.id===id.slice(2)&&editingNow()){ SY.deferred[id]=row; return false; }
+    const pid=id.slice(2), mine=S.pages[pid];
+    if(onPage(pid)&&typedRecently()){ SY.deferred[id]=row; return false; }
+    delete SY.deferred[id];
+    if(row.deleted&&mine&&!m.x){ m.b=row.updated; SY.again=true; return false; }   // deleted elsewhere but edited here: keep the edited one
+    if(mine&&!m.x&&!row.deleted&&SYBASE[pid]){                    // combine paragraph by paragraph
+      const r=merge3(SYBASE[pid],mine,row.data);
+      applyRemote(row); replaceIn(S.pages[pid],r.page);            // now "dirty" against the cloud version -> the combined page uploads
+      SY.dups=(SY.dups||0)+r.conflicts; return true; }
     if(mine&&!m.x&&!row.deleted&&JSON.stringify(mine)!==JSON.stringify(row.data)){
       const c=JSON.parse(JSON.stringify(mine)); c.id=uid(); c.title=titleOf(mine)+' (conflict copy)'; c.fav=false; c.created=c.updated=Date.now(); (c.blocks||[]).forEach(b=>b.id=uid());
       S.pages[c.id]=c; SY.conflicts=(SY.conflicts||0)+1; }
@@ -1068,23 +1164,26 @@ async function syncNow(manual){
       }
       S.seedIds=[]; changed=true;
     }
+    SY.curTouched=false;
     remote.forEach(r=>{ if(takeRemote(r)) changed=true; });
     Object.values(SY.deferred).forEach(r=>{ if(takeRemote(r)) changed=true; });
     if(maxTs) SY.meta.cursor=maxTs;
-    if(changed){ await saveNow(); }
+    if(SY.curTouched){ SY.curTouched=false; renderKeepCaret(); changed=false; await saveNow(); }   // the open page got new data: redraw now, before you type into the old copy
+    else if(changed){ safeRender(); changed=false; await saveNow(); }
     const M=SY.meta.rec, recs=recordsOf(S), dirty=Object.keys(M).filter(id=>M[id].d);
     let batch=[], size=0;
-    const sendBatch=async()=>{ if(!batch.length) return; const snap=batch.map(x=>[x.id,x.updated]);
+    const sendBatch=async()=>{ if(!batch.length) return; const snap=batch.map(x=>[x.id,x.updated]), batchRows=batch.slice();
       const refused=new Set(await rpc('push_items',{p_key:SY.key,p_rows:batch})||[]);
-      snap.forEach(([id,u])=>{ if(refused.has(id)){ SY.again=true; return; } if(M[id]&&M[id].u===u){ M[id].d=0; M[id].b=u; } });
+      snap.forEach(([id,u],i)=>{ if(refused.has(id)){ SY.again=true; return; } if(M[id]&&M[id].u===u){ M[id].d=0; M[id].b=u; }
+        if(id.startsWith('p:')){ const rw=batchRows[i]; if(rw.deleted) delete SYBASE[id.slice(2)]; else SYBASE[id.slice(2)]=rw.data; if(M[id]&&M[id].u!==u) M[id].b=u; baseSave(); } });
       batch=[]; size=0; };
     for(const id of dirty){ const m=M[id]; const r=recs.get(id);
-      const row=m.x||!r?{id,kind:kindOfId(id),data:null,updated:m.u,base:m.b||0,deleted:true}:{id,kind:r.kind,data:r.obj,updated:m.u,base:m.b||0,deleted:false};
+      const row=m.x||!r?{id,kind:kindOfId(id),data:null,updated:m.u,base:m.b||0,deleted:true}:{id,kind:r.kind,data:r.kind==='page'?cl(r.obj):r.obj,updated:m.u,base:m.b||0,deleted:false};
       const len=JSON.stringify(row).length; if(batch.length&&(size+len>1500000||batch.length>=40)) await sendBatch(); batch.push(row); size+=len; }
     await sendBatch();
     SY.meta.ever=true; await metaSave();
     SY.last=Date.now(); setStatus('ok');
-    if(changed) safeRender();
+    if(SY.dups){ toast(SY.dups===1?'You and someone else changed the same paragraph at the same time. Both versions are on the page, marked in yellow. Keep one.':SY.dups+' paragraphs were changed in two places at once. Both versions are on the page, marked in yellow.'); SY.dups=0; }
     if(SY.conflicts){ toast(SY.conflicts===1?'A page was changed on two devices. Both versions are kept: look for “(conflict copy)”.':SY.conflicts+' pages were changed on two devices. Both versions of each are kept.'); SY.conflicts=0; }
     if(manual) toast('Synced');
   }catch(e){
@@ -1095,7 +1194,8 @@ async function syncNow(manual){
 }
 function saveNow(){ return (async()=>{ clearTimeout(saveT); try{ const d=await idb(); d.transaction('kv','readwrite').objectStore('kv').put(JSON.parse(JSON.stringify(S)),'state'); }catch(e){} detectChanges(false); })(); }
 async function initSync(){
-  await metaLoad();
+  await metaLoad(); await baseLoad();
+  Object.values(S.pages||{}).forEach(p=>{ const m=SY.meta.rec['p:'+p.id]; if(!SYBASE[p.id]&&m&&!m.d&&m.b) SYBASE[p.id]=cl(p); }); baseSave();
   const cfg=syncConfig();
   if(!cfg||!window.supabase||!window.supabase.createClient){ setStatus('off'); return; }
   try{ SY.client=window.supabase.createClient(cfg.url,cfg.key,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}}); }catch(e){ setStatus('error',e.message); return; }
@@ -1105,6 +1205,7 @@ async function initSync(){
   const hk=cleanKey(decodeURIComponent((location.hash||'').replace(/^#k=/,'')));
   if(/^#k=/.test(location.hash||'')){ try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){} if(hk&&hk!==SY.key) openJoin(hk); }
   setInterval(()=>{ if(!document.hidden) syncNow(); },30000);
+  setInterval(()=>{ if(!document.hidden&&!SY.busy&&R.v==='page'&&S.pages[R.id]&&S.pages[R.id].share) syncNow(); },5000);   // a shared page refreshes every 5 seconds
   document.addEventListener('visibilitychange',()=>{ if(!document.hidden) syncNow(); });
   window.addEventListener('focus',()=>syncNow());
   window.addEventListener('online',()=>syncNow());
@@ -1242,7 +1343,7 @@ function openShare(p){
 
 /* ---- the shared view (opened from someone's link) ---- */
 async function bootShared(token){
-  SHARED={token,perm:'view',root:null,base:{},hash:{},dirty:new Set(),mine:{},timer:null,busy:false,dead:false};
+  SHARED={token,perm:'view',root:null,base:{},baseData:{},hash:{},dirty:new Set(),mine:{},timer:null,busy:false,dead:false,tries:0};
   document.body.classList.add('shared-mode');
   S={v:1,settings:{name:'',theme:'system'},spaces:[],pages:{},tasks:[],recurs:[],ui:{open:{},collapsed:{}}};
   applyTheme();
@@ -1251,7 +1352,7 @@ async function bootShared(token){
   SY.client=window.supabase.createClient(cfg.url,cfg.key,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
   $('#view').replaceChildren(h('div',{class:'doc'},h('p',{class:'muted'},'Opening the shared page…')));
   await sharedPull(true);
-  setInterval(()=>{ if(!document.hidden) sharedPull(); },20000);
+  let tick=0; setInterval(()=>{ tick++; if(!document.hidden&&(SHARED.perm==='edit'||tick%3===0)) sharedPull(); },5000);   // edit links: every 5 s, view links: every 15 s
   document.addEventListener('visibilitychange',()=>{ if(!document.hidden) sharedPull(); });
   window.addEventListener('focus',()=>sharedPull());
 }
@@ -1269,35 +1370,48 @@ async function sharedPull(first){
   try{ res=await rpc('shared_pull',{p_token:SHARED.token}); }
   catch(e){ if(/link off/i.test((e&&e.message)||'')){ SHARED.dead=true; sharedMessage('This link is turned off','Ask the person who shared it for a new link.'); } else if(first) sharedMessage('Couldn’t open this page','Check your internet connection and try again.'); return; }
   const wasPerm=SHARED.perm; SHARED.perm=res.perm; SHARED.root=res.root;
-  let changed=first||wasPerm!==res.perm; const seen=new Set();
+  let changed=first||wasPerm!==res.perm, cur=false, dups=0, merged=false; const seen=new Set();
+  if(!first) sharedChanged(true);                          // note any typing not yet recorded
   (res.items||[]).forEach(it=>{ const pid=it.id.slice(2); seen.add(pid);
     if(SHARED.base[pid]===it.updated) return;
-    if(SHARED.dirty.has(pid)) return;                       // our edit is on its way; the upload decides
-    if(S.pages[pid]&&R.v==='page'&&R.id===pid&&editingNow()){ SHARED.later=true; return; }
-    if(S.pages[pid]){ const t=S.pages[pid]; Object.keys(t).forEach(k=>delete t[k]); Object.assign(t,it.data); } else S.pages[pid]=it.data;
-    SHARED.base[pid]=it.updated; SHARED.hash[pid]=JSON.stringify(S.pages[pid]); changed=true; });
+    if(S.pages[pid]&&onPage(pid)&&typedRecently()) return;  // wait until you pause typing
+    if(S.pages[pid]&&SHARED.dirty.has(pid)){                // both changed it: combine paragraph by paragraph
+      const r=merge3(SHARED.baseData[pid],S.pages[pid],it.data); replaceIn(S.pages[pid],r.page); dups+=r.conflicts; merged=true;
+    } else { if(S.pages[pid]) replaceIn(S.pages[pid],it.data); else S.pages[pid]=it.data; SHARED.hash[pid]=JSON.stringify(S.pages[pid]); }
+    SHARED.base[pid]=it.updated; SHARED.baseData[pid]=cl(it.data); changed=true; if(onPage(pid)) cur=true; });
   Object.keys(S.pages).forEach(pid=>{ if(!seen.has(pid)){ delete S.pages[pid]; changed=true; } });
   if(!S.pages[res.root]){ sharedMessage('This page isn’t available','It may have been moved to the trash.'); return; }
   if(first||!S.pages[R.id]) R={v:'page',id:res.root};
   sharedBar();
-  if(changed) safeRender();
+  if(cur&&!first) renderKeepCaret(); else if(changed) safeRender();
+  if(merged) sharedChanged();
+  if(dups) toast(dups===1?'You and someone else changed the same paragraph at the same time. Both versions are on the page, marked in yellow. Keep one.':dups+' paragraphs were changed in two places at once. Both versions are on the page, marked in yellow.');
 }
-function sharedChanged(){
+function sharedChanged(quiet){
   if(!SHARED||SHARED.perm!=='edit') return;
   Object.values(S.pages).forEach(p=>{ const j=JSON.stringify(p); if(SHARED.hash[p.id]!==j){ SHARED.hash[p.id]=j; SHARED.dirty.add(p.id); } });
+  if(quiet) return;
   if(SHARED.dirty.size){ sharedBar(); clearTimeout(SHARED.timer); SHARED.timer=setTimeout(sharedPush,1500); }
 }
 async function sharedPush(){
   if(!SHARED||SHARED.busy||!SHARED.dirty.size) return;
   SHARED.busy=true; sharedBar();
-  const ids=[...SHARED.dirty]; const rows=ids.map(pid=>({id:'p:'+pid,data:S.pages[pid],updated:Date.now(),base:SHARED.base[pid]||0}));
+  sharedChanged(true);
+  const ids=[...SHARED.dirty]; const rows=ids.map(pid=>({id:'p:'+pid,data:cl(S.pages[pid]),updated:Date.now(),base:SHARED.base[pid]||0}));
   try{
     const refused=new Set(await rpc('shared_push',{p_token:SHARED.token,p_rows:rows})||[]);
-    rows.forEach(r=>{ const pid=r.id.slice(2); if(SHARED.hash[pid]!==JSON.stringify(S.pages[pid])) return; SHARED.dirty.delete(pid);
-      if(refused.has(r.id)){ SHARED.mine[pid]=JSON.parse(JSON.stringify(S.pages[pid])); delete SHARED.base[pid]; SHARED.conflict=true; } else SHARED.base[pid]=r.updated; });
+    rows.forEach(r=>{ const pid=r.id.slice(2);
+      if(refused.has(r.id)){ SHARED.conflict=true; return; }           // someone saved first: combine with theirs, then save again
+      SHARED.base[pid]=r.updated; SHARED.baseData[pid]=r.data;
+      if(SHARED.hash[pid]===JSON.stringify(S.pages[pid])) SHARED.dirty.delete(pid); });
+    if(!SHARED.conflict) SHARED.tries=0;
   }catch(e){ const m=(e&&e.message)||''; if(/view only/i.test(m)){ SHARED.perm='view'; SHARED.dirty.clear(); toast('This link was changed to view only.'); safeRender(); } else if(/link off/i.test(m)){ SHARED.dead=true; sharedMessage('This link is turned off','Ask the person who shared it for a new link.'); } else { SHARED.timer=setTimeout(sharedPush,15000); } }
   finally{ SHARED.busy=false; if(!SHARED.dead) sharedBar(); }
-  if(SHARED.conflict){ SHARED.conflict=false; await sharedPull(); toast('Someone else changed this page at the same time. You’re seeing the latest version.',{label:'Show my version',fn:showMine}); }
+  if(SHARED.conflict){ SHARED.conflict=false; SHARED.tries++;
+    if(SHARED.tries<=4){ await sharedPull(); clearTimeout(SHARED.timer); SHARED.timer=setTimeout(sharedPush,300+Math.random()*700); }
+    else {                                                            // keeps failing: last resort, give a copy of your text
+      SHARED.tries=0; SHARED.dirty.forEach(pid=>{ SHARED.mine[pid]=cl(S.pages[pid]); delete SHARED.base[pid]; }); SHARED.dirty.forEach(pid=>{ delete SHARED.hash[pid]; }); SHARED.dirty.clear();
+      await sharedPull(); toast('This page couldn’t be saved because it keeps changing. You’re seeing the latest version.',{label:'Show my version',fn:showMine}); } }
 }
 function showMine(){
   const lines=[]; Object.values(SHARED.mine).forEach(p=>{ lines.push('# '+titleOf(p)); (p.blocks||[]).forEach(b=>{ const t=plain(b.text||''); if(t.trim()) lines.push(t); if(b.data&&b.data.rows) b.data.rows.forEach(r=>lines.push(r.map(plain).join(' | '))); }); lines.push(''); });
@@ -1311,7 +1425,7 @@ function lockIfViewOnly(){
   document.body.classList.toggle('shared-ro',ro);
   if(!ro) return;
   document.querySelectorAll('#view [contenteditable]').forEach(e=>e.setAttribute('contenteditable','false'));
-  document.querySelectorAll('#view input, #view select, #view textarea').forEach(e=>{ e.disabled=true; });
+  document.querySelectorAll('#view input:not(.pg-q), #view select, #view textarea').forEach(e=>{ e.disabled=true; });
 }
 
 /* ---------- queries ---------- */
@@ -1873,7 +1987,7 @@ function iconPicker(anchor,p){
   popover(anchor,[{node:h('div',{class:'emoji-grid'},EMOJI.map(em=>h('button',{'aria-label':em,onclick:()=>{p.icon=em;touch(p);closePop();renderView();renderSidebar();}},em)))},{node:h('div',{style:{padding:'4px'}},inp)},p.icon?{label:'Remove icon',icon:'x',fn:()=>{p.icon='';touch(p);renderView();renderSidebar();}}:null]);
 }
 function coverPicker(anchor,p){
-  popover(anchor,[{title:'Cover colour'},{node:h('div',{class:'swatches'},COLORS.map(c=>h('button',{'aria-label':c,style:{background:`var(--s-${c})`},onclick:()=>{p.cover=c;touch(p);closePop();renderView();}})))},p.cover?{label:'Remove cover',icon:'x',fn:()=>{p.cover=null;touch(p);renderView();}}:null]);
+  popover(anchor,[{title:'Cover colour'},{node:swatchGrid(p.cover,c=>{p.cover=c;touch(p);closePop();renderView();},true)},p.cover?{label:'Remove cover',icon:'x',fn:()=>{p.cover=null;touch(p);renderView();}}:null]);
 }
 function pageMenu(anchor,p){
   popover(anchor,[
@@ -1924,7 +2038,7 @@ function blocksEditor(p){
   const tail=h('div',{style:{minHeight:'90px',cursor:'text'},onclick:()=>{ const last=p.blocks[p.blocks.length-1]; if(last&&last.type==='p'&&!plain(last.text).trim()) return focusBlock(last.id,'end'); const nb=blk('p'); p.blocks.push(nb); touch(p); fillBlocks(p); focusBlock(nb.id); }});
   return h('div',{},editorEl,tail);
 }
-function fillBlocks(p){ if(!editorEl) return; setTimeout(lockIfViewOnly,0); const cnt=[]; editorEl.replaceChildren(...p.blocks.map(b=>{ const L=b.indent||0; cnt.length=Math.min(cnt.length,L+1); while(cnt.length<L+1) cnt.push(0); cnt[L]=b.type==='num'?cnt[L]+1:0; return renderBlock(p,b,cnt[L]); })); }
+function fillBlocks(p){ if(!editorEl) return; setTimeout(lockIfViewOnly,0); const gc={}; p.blocks.forEach(b=>{ if(b.conflict) gc[b.conflict]=(gc[b.conflict]||0)+1; }); p.blocks.forEach(b=>{ if(b.conflict&&gc[b.conflict]<2) delete b.conflict; }); const cnt=[]; editorEl.replaceChildren(...p.blocks.map(b=>{ const L=b.indent||0; cnt.length=Math.min(cnt.length,L+1); while(cnt.length<L+1) cnt.push(0); cnt[L]=b.type==='num'?cnt[L]+1:0; return renderBlock(p,b,cnt[L]); })); }
 const ROMAN=['i','ii','iii','iv','v','vi','vii','viii','ix','x','xi','xii'];
 function numLabel(n,L){ const k=L%3; if(k===1) return (n<=26?String.fromCharCode(96+n):n)+'.'; if(k===2) return (ROMAN[n-1]||n)+'.'; return n+'.'; }
 function setIndent(p,b,delta){
@@ -1972,6 +2086,7 @@ function renderBlock(p,b,n){
   row.addEventListener('dragleave',()=>row.classList.remove('drop-below','drop-above'));
   row.addEventListener('drop',e=>{ e.preventDefault(); const below=row.classList.contains('drop-below'); row.classList.remove('drop-below','drop-above'); if(!dragId||dragId===b.id) return; const from=p.blocks.findIndex(x=>x.id===dragId); const [m]=p.blocks.splice(from,1); let to=p.blocks.indexOf(b)+(below?1:0); p.blocks.splice(to,0,m); dragId=null; touch(p); fillBlocks(p); });
   const body=h('div',{class:'bbody'}); row.append(body);
+  if(b.conflict){ row.classList.add('conflict'); row.append(h('div',{class:'cbar'},h('span',{},'Changed in two places at once'),h('button',{class:'btn sm',onclick:()=>keepVersion(p,b)},ic('check',13),'Keep this one'))); }
   const T=()=>txtEl(p,b);
   switch(b.type){
     case 'todo': body.append(h('input',{type:'checkbox',class:'chk',checked:!!b.checked,'aria-label':'Done',onchange:e=>{ b.checked=e.target.checked; row.classList.toggle('done',b.checked); touch(p); }}),T()); break;
@@ -2350,7 +2465,8 @@ function drawBlock(p,b){
 const COLTYPES={text:'Text',select:'Select',tags:'Tags',date:'Date',checkbox:'Checkbox',number:'Number',url:'Link'};
 const COLICON={title:'text',text:'text',select:'chevd',tags:'tag',date:'calendar',checkbox:'check',number:'hash',url:'link'};
 const calMonth={};
-function optColor(col,v){ const i=(col.options||[]).indexOf(v); return COLORS[(i<0?7:i)%COLORS.length]; }
+function optColor(col,v){ if(col.colors&&col.colors[v]&&COLORS.includes(col.colors[v])) return col.colors[v]; const i=(col.options||[]).indexOf(v); return COLORS[(i<0?7:i)%8]; }
+function pinColors(col){ col.colors=col.colors||{}; (col.options||[]).forEach(o=>{ if(!col.colors[o]) col.colors[o]=optColor(col,o); }); }
 function newRow(db,props){ const r=newPage({dbId:db.id,space:db.space,title:'',props:props||{},blocks:[blk('p')]}); touch(db); return r; }
 function cellEditor(db,row,col,inTable){
   const v=col.type==='title'?row.title:row.props[col.id];
@@ -2437,18 +2553,73 @@ function galView(db,cols,rs,draw){
   const texts=cols.filter(c=>c.type==='text');
   const pc=texts.find(c=>/prompt/i.test(c.name))||texts[texts.length-1];
   const tool=texts.find(c=>c!==pc&&/tool/i.test(c.name));
-  return h('div',{class:'pgal'},rs.map(r=>{
+  const cards=[];
+  const grid=h('div',{class:'pgal'},rs.map(r=>{
     const cv=cat&&r.props[cat.id], color=cv?optColor(cat,cv):'slate';
     const txt=pc?String(r.props[pc.id]||''):'';
     const tv=tool&&r.props[tool.id];
     const btn=h('button',{class:'pfab','aria-label':'Copy prompt for '+titleOf(r),title:'Copy prompt',onclick:()=>{ if(!txt.trim()){ toast('This card has no prompt yet. Open it to add one.'); return; } copyText(txt); btn.classList.add('ok'); btn.replaceChildren(ic('check',17)); setTimeout(()=>{ btn.classList.remove('ok'); btn.replaceChildren(ic('copy',17)); },1500); }},ic('copy',17));
-    return h('article',{class:'pcard'},
+    const card=h('article',{class:'pcard'},
       h('div',{class:'pband',style:{background:`var(--s-${color})`,color:`var(--c-${color})`}},cv||'No category'),
       h('div',{class:'pbody'},btn,
         h('button',{class:'pctitle',onclick:()=>promptModal(db,r,draw)},(r.icon?r.icon+' ':'')+titleOf(r)),
         txt?h('p',{class:'ptext'},txt):h('p',{class:'ptext empty'},'No prompt yet. Click the name to add one.'),
         tv?h('small',{class:'ptool'},'Tool: '+tv):null));
+    cards.push({el:card,t:titleOf(r).toLowerCase(),c:cv||''}); return card;
   }),h('button',{class:'pnew',onclick:()=>promptModal(db,null,draw)},ic('plus',18),'New prompt'));
+  // search by name (capital letters don't matter) and filter by category; filtering happens in place so typing isn't interrupted
+  const st=GAL[db.id]||(GAL[db.id]={q:'',c:null});
+  if(st.c&&!(cat&&(cat.options||[]).includes(st.c))) st.c=null;
+  const cnt=h('span',{class:'pg-cnt','aria-live':'polite'}), none=h('div',{class:'pg-none',hidden:true});
+  const apply=()=>{ const q=st.q.trim().toLowerCase(); let n=0;
+    cards.forEach(k=>{ const ok=(!q||k.t.includes(q))&&(!st.c||k.c===st.c); k.el.hidden=!ok; if(ok) n++; });
+    cnt.textContent=n===cards.length?cards.length+(cards.length===1?' prompt':' prompts'):n+' of '+cards.length+' prompts';
+    none.hidden=n>0||!cards.length; none.textContent=st.q.trim()?'No prompts called “'+st.q.trim()+'”'+(st.c?' in '+st.c:'')+'.':'No prompts in '+st.c+' yet.'; };
+  const q=h('input',{class:'field pg-q',type:'search',placeholder:'Search prompts by name…','aria-label':'Search prompts by name',value:st.q});
+  q.addEventListener('input',()=>{ st.q=q.value; apply(); });
+  q.addEventListener('keydown',e=>{ if(e.key==='Escape'&&q.value){ e.stopPropagation(); q.value=''; st.q=''; apply(); } });
+  const chipRow=h('div',{class:'pg-chips',role:'group','aria-label':'Show category'});
+  const drawChips=()=>{ chipRow.replaceChildren(...[null,...((cat&&cat.options)||[])].map(o=>{ const on=st.c===o, c=o?optColor(cat,o):null;
+      return h('button',{class:'pm-chip'+(on?' on':''),'aria-pressed':String(on),style:on?(o?{background:`var(--s-${c})`,color:`var(--c-${c})`,borderColor:`var(--c-${c})`}:{background:'var(--ink)',color:'var(--bg)',borderColor:'var(--ink)'}):{},onclick:()=>{ st.c=o; drawChips(); apply(); }},o?h('span',{class:'pg-dot',style:{background:`var(--c-${c})`}}):null,o||'All'); }),cnt); };
+  drawChips(); apply();
+  const top=h('div',{class:'pg-top'},
+    h('div',{class:'pg-srow'},h('div',{class:'pg-sbox'},ic('search',17),q),cat?h('button',{class:'btn sm pg-edit',onclick:()=>catEditor(db,cat,draw)},ic('pen',14),'Edit categories'):null),
+    cat&&(cat.options||[]).length?chipRow:h('div',{class:'pg-chips'},cnt));
+  return h('div',{},top,none,grid);
+}
+const GAL={};
+/* rename categories, change their colour, add or delete them */
+function catEditor(db,cat,draw){
+  pinColors(cat); let open=null;
+  const list=h('div',{class:'ce-list'}), err=h('p',{class:'pm-err',hidden:true});
+  const used=o=>rows(db).filter(r=>r.props[cat.id]===o).length;
+  const drawList=()=>{ list.replaceChildren(...(cat.options||[]).map(o=>{
+    const c=optColor(cat,o), n=used(o);
+    const nm=h('input',{class:'field',value:o,'aria-label':'Category name'});
+    nm.addEventListener('change',()=>{ const v=nm.value.trim(); err.hidden=true;
+      if(!v||v===o){ nm.value=o; return; }
+      if(cat.options.includes(v)){ err.textContent='There is already a category called “'+v+'”.'; err.hidden=false; nm.value=o; return; }
+      cat.options=cat.options.map(x=>x===o?v:x); cat.colors[v]=cat.colors[o]; delete cat.colors[o];
+      rows(db).forEach(r=>{ if(r.props[cat.id]===o){ r.props[cat.id]=v; touch(r); } });
+      if(GAL[db.id]&&GAL[db.id].c===o) GAL[db.id].c=v;
+      if(open===o) open=v; touch(db); draw(); drawList(); });
+    nm.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); nm.blur(); } });
+    let armed=false;
+    const del=h('button',{class:'icon-btn','aria-label':'Delete '+o,onclick:()=>{ if(!armed){ armed=true; del.replaceChildren(h('span',{class:'ce-sure'},'Sure?')); setTimeout(()=>{ if(armed&&del.isConnected){ armed=false; del.replaceChildren(ic('trash',16)); } },3000); return; }
+      cat.options=cat.options.filter(x=>x!==o); delete cat.colors[o];
+      rows(db).forEach(r=>{ if(r.props[cat.id]===o){ r.props[cat.id]=null; touch(r); } });
+      touch(db); draw(); drawList(); toast(n?'Category deleted. Its '+n+(n===1?' prompt is':' prompts are')+' now “No category”.':'Category deleted'); }},ic('trash',16));
+    const dot=h('button',{class:'icon-btn ce-dotb','aria-label':'Change colour of '+o,'aria-expanded':String(open===o),onclick:()=>{ open=open===o?null:o; drawList(); }},h('span',{class:'ce-dot',style:{background:`var(--c-${c})`,boxShadow:`0 0 0 3px var(--s-${c})`}}));
+    return h('div',{class:'ce-item'},
+      h('div',{class:'ce-row'},dot,nm,h('span',{class:'ce-n'},n+(n===1?' prompt':' prompts')),del),
+      open===o?swatchGrid(c,k=>{ cat.colors[o]=k; touch(db); draw(); drawList(); }):null); }));
+    if(!(cat.options||[]).length) list.append(h('p',{class:'muted',style:{margin:'4px 0'}},'No categories yet.')); };
+  const add=h('button',{class:'pm-chip add',style:{alignSelf:'flex-start'},onclick:()=>{ let v='New category',i=2; while(cat.options.includes(v)) v='New category '+(i++);
+    const free=PALETTE.filter(k=>!Object.values(cat.colors).includes(k)); cat.options.push(v); cat.colors[v]=free[0]||'slate'; touch(db); draw(); drawList();
+    const ins=list.querySelectorAll('.ce-row input'); const last=ins[ins.length-1]; if(last){ last.focus(); last.select(); } }},'+ Add category');
+  cat.options=cat.options||[]; drawList();
+  modal('Edit categories',[h('p',{class:'muted',style:{margin:0}},'Tap a colour dot to change it. Renaming a category updates every prompt in it.'),list,add,err,
+    h('div',{class:'row',style:{justifyContent:'flex-end'}},h('button',{class:'btn pri',onclick:closeModal},'Done'))]);
 }
 function promptCols(db){ const cols=db.db.cols; const texts=cols.filter(c=>c.type==='text'); const pc=texts.find(c=>/prompt/i.test(c.name))||texts[texts.length-1]; return {cat:cols.find(c=>c.type==='select'),pc,tool:texts.find(c=>c!==pc&&/tool/i.test(c.name)),link:cols.find(c=>c.type==='url')}; }
 function promptModal(db,row,draw){
@@ -2584,7 +2755,7 @@ function openSettings(){
   const spl=h('div',{class:'pe-list'});
   const drawSp=()=>spl.replaceChildren(...S.spaces.map(sp=>{
     const n=h('input',{class:'field',value:sp.name,'aria-label':'Space name',id:'sp-n-'+sp.id}); n.addEventListener('input',()=>{ sp.name=n.value||'Untitled'; save(); sidebarSoon(); });
-    const sw=h('button',{class:'icon-btn','aria-label':'Change colour of '+sp.name,onclick:e=>popover(e.currentTarget,[{node:h('div',{class:'swatches'},COLORS.map(c=>h('button',{'aria-label':c,style:{background:`var(--c-${c})`},onclick:()=>{ sp.color=c; save(); closePop(); renderSidebar(); drawSp(); }})))}])},h('span',{class:'dot',style:{width:'16px',height:'16px',borderRadius:'5px',background:`var(--c-${sp.color})`}}));
+    const sw=h('button',{class:'icon-btn','aria-label':'Change colour of '+sp.name,onclick:e=>popover(e.currentTarget,[{node:swatchGrid(sp.color,c=>{ sp.color=c; save(); closePop(); renderSidebar(); drawSp(); })}])},h('span',{class:'dot',style:{width:'16px',height:'16px',borderRadius:'5px',background:`var(--c-${sp.color})`}}));
     let armed=false;
     const del=S.spaces.length<2?h('span',{style:{width:'36px'}}):h('button',{class:'icon-btn','aria-label':'Delete '+sp.name,onclick:()=>{ if(!armed){ armed=true; del.replaceChildren(h('span',{style:{fontSize:'12px',color:'var(--danger)',fontWeight:600}},'Sure?')); setTimeout(()=>{ if(armed){armed=false; del.replaceChildren(ic('trash',16));} },3000); return; } pages().filter(p=>p.space===sp.id&&!p.parent&&!p.dbId).forEach(p=>{p.trashed=true;p.trashedAt=Date.now();}); S.spaces=S.spaces.filter(x=>x!==sp); save(); renderSidebar(); drawSp(); if(R.v==='page') renderView(); toast('Space deleted. Its pages are in Trash.'); }},ic('trash',16));
     const idx=S.spaces.indexOf(sp);
