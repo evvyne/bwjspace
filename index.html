@@ -440,6 +440,25 @@ table.st{border-collapse:collapse;font-size:14.5px}
 .scan{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
 .scan video{width:100%;max-height:280px;border-radius:10px;background:#000;object-fit:cover}
 
+/* sharing */
+.share-b{gap:6px}
+.share-b.on{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+.shared-dot{display:inline-flex;color:var(--accent);margin-left:4px;flex:none}
+.share-box{display:flex;flex-direction:column;gap:12px;border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.sw{width:42px;height:24px;border-radius:999px;background:var(--line-2);position:relative;flex:none;cursor:pointer}
+.sw::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .15s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.sw.on{background:var(--accent)}.sw.on::after{left:21px}
+.shared-mode #sb,.shared-mode #scrim,.shared-mode #tb-menu,.shared-mode #tb-search,.shared-mode .ttl-tools{display:none!important}
+.share-bar{display:flex;align-items:center;gap:8px;padding:8px max(16px,env(safe-area-inset-right,0px)) 8px max(16px,env(safe-area-inset-left,0px));font-size:13.5px;border-bottom:1px solid var(--line)}
+.share-bar.view{background:var(--s-blue);color:var(--c-blue)}
+.share-bar.edit{background:var(--accent-soft);color:var(--accent)}
+.share-bar>span:nth-child(2){flex:1}
+.share-bar .sb-st{font-size:12.5px;opacity:.85;white-space:nowrap}
+.shared-ro .g,.shared-ro .page-acts,.shared-ro .tbl-addc,.shared-ro .tbl-addr,.shared-ro .dtools,.shared-ro .dres,.shared-ro .ihandle,.shared-ro .lcard .icon-btn,.shared-ro .place .btn,.shared-ro .page-icon{pointer-events:none}
+.shared-ro .g{visibility:hidden}
+.shared-ro .page-acts,.shared-ro .tbl-addc,.shared-ro .tbl-addr,.shared-ro .dtools,.shared-ro .dres,.shared-ro .ihandle,.shared-ro .lcard .icon-btn{display:none}
+.shared-ro .dcan{pointer-events:none;cursor:default}
+
 /* review */
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr));gap:12px;margin-bottom:18px}
 .stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:2px}
@@ -922,7 +941,7 @@ let dbConn=null;
 function idb(){ if(dbConn) return Promise.resolve(dbConn); return new Promise((res,rej)=>{ try{ const r=indexedDB.open('bwjspace',1); r.onupgradeneeded=()=>r.result.createObjectStore('kv'); r.onsuccess=()=>{dbConn=r.result;res(dbConn);}; r.onerror=()=>rej(r.error);}catch(e){rej(e);} }); }
 async function load(){ try{ const d=await idb(); return await new Promise((res)=>{ const q=d.transaction('kv').objectStore('kv').get('state'); q.onsuccess=()=>res(q.result||null); q.onerror=()=>res(null); }); }catch(e){ return null; } }
 let saveT=null;
-function save(){ clearTimeout(saveT); saveT=setTimeout(async()=>{ try{ const d=await idb(); d.transaction('kv','readwrite').objectStore('kv').put(JSON.parse(JSON.stringify(S)),'state'); }catch(e){} if(autoDepth===0) detectChanges(false); },300); }
+function save(){ if(SHARED){ clearTimeout(saveT); saveT=setTimeout(sharedChanged,300); return; } clearTimeout(saveT); saveT=setTimeout(async()=>{ try{ const d=await idb(); d.transaction('kv','readwrite').objectStore('kv').put(JSON.parse(JSON.stringify(S)),'state'); }catch(e){} if(autoDepth===0) detectChanges(false); },300); }
 function touch(p){ if(p){p.updated=Date.now(); if(p.dbId&&S.pages[p.dbId]) S.pages[p.dbId].updated=Date.now();} save(); }
 /* ---------- cloud sync (Supabase) ----------
    Rules that keep data safe:
@@ -1183,6 +1202,118 @@ async function listBackups(){ try{ const d=await idb(); return await new Promise
 async function readBackup(k){ try{ const d=await idb(); return await new Promise(res=>{ const q=d.transaction('kv').objectStore('kv').get(k); q.onsuccess=()=>res(q.result||null); q.onerror=()=>res(null); }); }catch(e){ return null; } }
 
 
+/* ---------- sharing one page with a link ---------- */
+let SHARED=null;   // set when this page was opened from a share link
+function newShareToken(){ const A='abcdefghijkmnpqrstuvwxyz23456789'; const b=new Uint8Array(28); crypto.getRandomValues(b); let s=''; for(let i=0;i<28;i++) s+=A[b[i]%32]; return 'shr'+s; }
+function shareLink(t){ return location.origin+location.pathname+'#share='+t; }
+function openShare(p){
+  const body=[];
+  if(!SY.client||!SY.key){
+    body.push(h('p',{style:{margin:0}},'Sharing uses your cloud copy, so turn on cloud sync first.'),h('div',{class:'row',style:{justifyContent:'flex-end'}},h('button',{class:'btn pri',onclick:openSync},ic('cloud',15),'Set up sync')));
+    modal('Share this page',body); return;
+  }
+  const sh=p.share||null, on=!!sh;
+  const msg=h('p',{class:'pm-err',hidden:true});
+  const call=async(fn)=>{ msg.hidden=true; try{ await fn(); }catch(e){ msg.textContent="Couldn't update sharing: "+((e&&e.message)||e); msg.hidden=false; } };
+  const apply=async(next)=>{ await rpc('share_set',{p_key:SY.key,p_page:p.id,p_token:next.token,p_perm:next.perm,p_subs:next.subs}); p.share=next; touch(p); syncNow(); renderSidebar(); renderView(); };
+  const sw=h('button',{class:'sw'+(on?' on':''),'aria-label':'Share with a link','aria-pressed':String(on),onclick:()=>call(async()=>{
+    if(on){ await rpc('share_stop',{p_key:SY.key,p_page:p.id}); delete p.share; touch(p); syncNow(); renderSidebar(); renderView(); toast('Sharing turned off. The old link no longer works.'); }
+    else { await apply({token:newShareToken(),perm:'view',subs:true}); toast('Link created'); }
+    openShare(p); })});
+  body.push(h('div',{class:'row'},h('span',{style:{flex:1,fontWeight:500}},'Share with a link'),sw));
+  if(on){
+    const perm=h('select',{class:'field',id:'sh-perm','aria-label':'Anyone with the link can',style:{width:'auto',height:'34px'}},h('option',{value:'view'},'View'),h('option',{value:'edit'},'Edit')); perm.value=sh.perm;
+    perm.addEventListener('change',()=>call(async()=>{ await apply(Object.assign({},sh,{perm:perm.value})); openShare(p); toast(perm.value==='edit'?'People with the link can now edit':'People with the link can now only view'); }));
+    const subs=h('input',{type:'checkbox',id:'sh-subs',checked:!!sh.subs});
+    subs.addEventListener('change',()=>call(async()=>{ await apply(Object.assign({},sh,{subs:subs.checked})); openShare(p); }));
+    const kids=children(p.id);
+    const link=h('input',{class:'field',readonly:true,value:shareLink(sh.token),'aria-label':'Share link',style:{fontFamily:'var(--f-mono)',fontSize:'12.5px'}});
+    link.addEventListener('focus',()=>link.select());
+    body.push(h('div',{class:'share-box'},
+      h('div',{class:'row'},h('label',{for:'sh-perm',style:{flex:1}},'Anyone with the link can'),perm),
+      h('label',{class:'row',for:'sh-subs',style:{gap:'8px'}},subs,h('span',{style:{flex:1}},'Include sub-pages',kids.length?h('span',{class:'muted'},' ('+kids.map(k=>titleOf(k)).slice(0,3).join(', ')+(kids.length>3?'…':'')+')'):h('span',{class:'muted'},' (none yet)'))),
+      h('div',{class:'row',style:{flexWrap:'nowrap'}},link,h('button',{class:'btn',onclick:()=>copyText(shareLink(sh.token))},ic('copy',14),'Copy')),
+      h('p',{class:'muted',style:{margin:0}},sh.perm==='edit'?'They can change and add to this page, but can’t delete pages or see your other pages or your sync key.':'They can read this page, but can’t change anything or see your other pages.')),
+      h('p',{class:'muted',style:{margin:0,fontSize:'12.5px'}},'Anyone you give the link to gets this access. If it goes to the wrong person, turn sharing off and on again for a new link.'));
+  } else body.push(h('p',{class:'muted',style:{margin:0}},'Make a link so someone can see this page, or edit it with you. They won’t see anything else in your Bwjspace.'));
+  body.push(msg);
+  modal('Share “'+titleOf(p)+'”',body);
+}
+
+/* ---- the shared view (opened from someone's link) ---- */
+async function bootShared(token){
+  SHARED={token,perm:'view',root:null,base:{},hash:{},dirty:new Set(),mine:{},timer:null,busy:false,dead:false};
+  document.body.classList.add('shared-mode');
+  S={v:1,settings:{name:'',theme:'system'},spaces:[],pages:{},tasks:[],recurs:[],ui:{open:{},collapsed:{}}};
+  applyTheme();
+  const cfg=syncConfig();
+  if(!cfg||!window.supabase){ sharedMessage('This shared page can’t be opened here.','Open the link in your browser.'); return; }
+  SY.client=window.supabase.createClient(cfg.url,cfg.key,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
+  $('#view').replaceChildren(h('div',{class:'doc'},h('p',{class:'muted'},'Opening the shared page…')));
+  await sharedPull(true);
+  setInterval(()=>{ if(!document.hidden) sharedPull(); },20000);
+  document.addEventListener('visibilitychange',()=>{ if(!document.hidden) sharedPull(); });
+  window.addEventListener('focus',()=>sharedPull());
+}
+function sharedMessage(title,sub){ $('#view').replaceChildren(h('div',{class:'doc',style:{textAlign:'center',paddingTop:'18vh'}},h('div',{class:'logo',style:{margin:'0 auto 16px',width:'44px',height:'44px',fontSize:'22px'}},'B'),h('h1',{class:'hello',style:{fontSize:'28px'}},title),h('p',{class:'muted'},sub))); const bar=$('#share-bar'); if(bar) bar.remove(); }
+function sharedBar(){
+  let bar=$('#share-bar'); const edit=SHARED.perm==='edit';
+  const st=SHARED.busy?'Saving…':SHARED.dirty.size?'Unsaved changes':edit?'All changes saved':'';
+  const kids=[ic(edit?'pen':'eye',15),h('span',{},edit?'You can edit this page. Changes are saved for everyone.':'View only. Shared from Bwjspace.'),h('span',{class:'sb-st'},st)];
+  if(!bar){ bar=h('div',{class:'share-bar',id:'share-bar',role:'status'}); $('#main').prepend(bar); }
+  bar.className='share-bar '+(edit?'edit':'view'); bar.replaceChildren(...kids);
+}
+async function sharedPull(first){
+  if(!SHARED||SHARED.busy||SHARED.dead) return;
+  let res;
+  try{ res=await rpc('shared_pull',{p_token:SHARED.token}); }
+  catch(e){ if(/link off/i.test((e&&e.message)||'')){ SHARED.dead=true; sharedMessage('This link is turned off','Ask the person who shared it for a new link.'); } else if(first) sharedMessage('Couldn’t open this page','Check your internet connection and try again.'); return; }
+  const wasPerm=SHARED.perm; SHARED.perm=res.perm; SHARED.root=res.root;
+  let changed=first||wasPerm!==res.perm; const seen=new Set();
+  (res.items||[]).forEach(it=>{ const pid=it.id.slice(2); seen.add(pid);
+    if(SHARED.base[pid]===it.updated) return;
+    if(SHARED.dirty.has(pid)) return;                       // our edit is on its way; the upload decides
+    if(S.pages[pid]&&R.v==='page'&&R.id===pid&&editingNow()){ SHARED.later=true; return; }
+    if(S.pages[pid]){ const t=S.pages[pid]; Object.keys(t).forEach(k=>delete t[k]); Object.assign(t,it.data); } else S.pages[pid]=it.data;
+    SHARED.base[pid]=it.updated; SHARED.hash[pid]=JSON.stringify(S.pages[pid]); changed=true; });
+  Object.keys(S.pages).forEach(pid=>{ if(!seen.has(pid)){ delete S.pages[pid]; changed=true; } });
+  if(!S.pages[res.root]){ sharedMessage('This page isn’t available','It may have been moved to the trash.'); return; }
+  if(first||!S.pages[R.id]) R={v:'page',id:res.root};
+  sharedBar();
+  if(changed) safeRender();
+}
+function sharedChanged(){
+  if(!SHARED||SHARED.perm!=='edit') return;
+  Object.values(S.pages).forEach(p=>{ const j=JSON.stringify(p); if(SHARED.hash[p.id]!==j){ SHARED.hash[p.id]=j; SHARED.dirty.add(p.id); } });
+  if(SHARED.dirty.size){ sharedBar(); clearTimeout(SHARED.timer); SHARED.timer=setTimeout(sharedPush,1500); }
+}
+async function sharedPush(){
+  if(!SHARED||SHARED.busy||!SHARED.dirty.size) return;
+  SHARED.busy=true; sharedBar();
+  const ids=[...SHARED.dirty]; const rows=ids.map(pid=>({id:'p:'+pid,data:S.pages[pid],updated:Date.now(),base:SHARED.base[pid]||0}));
+  try{
+    const refused=new Set(await rpc('shared_push',{p_token:SHARED.token,p_rows:rows})||[]);
+    rows.forEach(r=>{ const pid=r.id.slice(2); if(SHARED.hash[pid]!==JSON.stringify(S.pages[pid])) return; SHARED.dirty.delete(pid);
+      if(refused.has(r.id)){ SHARED.mine[pid]=JSON.parse(JSON.stringify(S.pages[pid])); delete SHARED.base[pid]; SHARED.conflict=true; } else SHARED.base[pid]=r.updated; });
+  }catch(e){ const m=(e&&e.message)||''; if(/view only/i.test(m)){ SHARED.perm='view'; SHARED.dirty.clear(); toast('This link was changed to view only.'); safeRender(); } else if(/link off/i.test(m)){ SHARED.dead=true; sharedMessage('This link is turned off','Ask the person who shared it for a new link.'); } else { SHARED.timer=setTimeout(sharedPush,15000); } }
+  finally{ SHARED.busy=false; if(!SHARED.dead) sharedBar(); }
+  if(SHARED.conflict){ SHARED.conflict=false; await sharedPull(); toast('Someone else changed this page at the same time. You’re seeing the latest version.',{label:'Show my version',fn:showMine}); }
+}
+function showMine(){
+  const lines=[]; Object.values(SHARED.mine).forEach(p=>{ lines.push('# '+titleOf(p)); (p.blocks||[]).forEach(b=>{ const t=plain(b.text||''); if(t.trim()) lines.push(t); if(b.data&&b.data.rows) b.data.rows.forEach(r=>lines.push(r.map(plain).join(' | '))); }); lines.push(''); });
+  const txt=lines.join('\n');
+  modal('Your version',[h('p',{class:'muted',style:{margin:0}},'This is what you had before the latest version loaded. Copy anything you want to keep and add it back.'),h('textarea',{class:'field',rows:'10',readonly:true,value:txt}),h('div',{class:'row',style:{justifyContent:'flex-end'}},h('button',{class:'btn pri',onclick:()=>copyText(txt)},ic('copy',14),'Copy'))]);
+}
+/* make the shared page read-only when the link is "view" */
+function lockIfViewOnly(){
+  if(!SHARED) return;
+  const ro=SHARED.perm!=='edit';
+  document.body.classList.toggle('shared-ro',ro);
+  if(!ro) return;
+  document.querySelectorAll('#view [contenteditable]').forEach(e=>e.setAttribute('contenteditable','false'));
+  document.querySelectorAll('#view input, #view select, #view textarea').forEach(e=>{ e.disabled=true; });
+}
+
 /* ---------- queries ---------- */
 const pages=()=>Object.values(S.pages);
 function alive(p){ let x=p,n=0; while(x&&n++<50){ if(x.trashed) return false; x=x.parent?S.pages[x.parent]:(x.dbId?S.pages[x.dbId]:null);} return true; }
@@ -1233,7 +1364,7 @@ function copyText(text){
 }
 
 /* ---------- navigation ---------- */
-function go(v,id){ closeSlash(); closePop(); R={v,id}; document.body.classList.remove('sb-open'); renderView(); renderSidebar(); $('#view').scrollTop=0; }
+function go(v,id){ if(SHARED&&(v!=='page'||!S.pages[id])) return; closeSlash(); closePop(); R={v,id}; document.body.classList.remove('sb-open'); renderView(); renderSidebar(); $('#view').scrollTop=0; }
 let sbT=null; function sidebarSoon(){ clearTimeout(sbT); sbT=setTimeout(renderSidebar,250); }
 
 /* ---------- sidebar ---------- */
@@ -1241,12 +1372,12 @@ function treeItem(pg,depth){
   const kids=children(pg.id); const open=!!S.ui.open[pg.id]; const on=R.v==='page'&&R.id===pg.id;
   const out=[h('div',{class:'ti'+(on?' on':''),style:{paddingLeft:(depth*14)+'px'}},
     h('button',{class:'tw'+(kids.length?'':' none'),'aria-label':open?'Collapse':'Expand',tabindex:kids.length?null:'-1',onclick:()=>{S.ui.open[pg.id]=!open;save();renderSidebar();}},ic(open?'chevd':'chevr',14)),
-    h('button',{class:'tl',onclick:()=>go('page',pg.id)}, pg.icon?h('span',{class:'emo'},pg.icon):ic(kindIcon(pg),15), h('span',{class:'tt'},titleOf(pg))),
+    h('button',{class:'tl',onclick:()=>go('page',pg.id)}, pg.icon?h('span',{class:'emo'},pg.icon):ic(kindIcon(pg),15), h('span',{class:'tt'},titleOf(pg)),pg.share?h('span',{class:'shared-dot',title:'Shared with a link'},ic('users',12)):null),
     pg.kind!=='db'?h('button',{class:'ta','aria-label':'Add sub-page',title:'Add sub-page',onclick:()=>templatePicker(pg.space,pg.id)},ic('plus',14)):null)];
   if(open) kids.forEach(k=>out.push(...treeItem(k,depth+1)));
   return out;
 }
-function renderSidebar(){
+function renderSidebar(){ if(SHARED) return;
   const sb=$('#sb'); const old=$('.sb-scroll',sb); const st=old?old.scrollTop:0;
   const navI=(icon,label,v,extra)=>h('button',{class:'ni'+(R.v===v?' on':''),onclick:()=>go(v)},ic(icon,16),label,extra||null);
   const favs=pages().filter(p=>p.fav&&alive(p));
@@ -1306,7 +1437,7 @@ function renderView(){
   else if(R.v==='trash'){ node=viewTrash(); title='Trash'; }
   else { node=viewHome(); title='Home'; }
   if(R.v!=='page'){ curPage=null; editorEl=null; }
-  v.replaceChildren(node); $('#tb-title').textContent=title;
+  v.replaceChildren(node); $('#tb-title').textContent=title; lockIfViewOnly();
 }
 
 /* ===== Weekly to-dos ===== */
@@ -1772,6 +1903,7 @@ function viewPage(p){
   ttl.addEventListener('paste',e=>{ e.preventDefault(); document.execCommand('insertText',false,(e.clipboardData.getData('text/plain')||'').replace(/\s*\n\s*/g,' ')); });
   ttl.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); if(p.kind==='db') return; if(!p.blocks.length){p.blocks.push(blk('p'));fillBlocks(p);} focusBlock(p.blocks[0].id,'start'); } });
   doc.append(h('div',{class:'ttl-row'},ttl,h('div',{class:'ttl-tools'},
+    !SHARED&&p.kind!=='db'&&!p.dbId?h('button',{class:'btn sm share-b'+(p.share?' on':''),'aria-label':p.share?'Shared. Change sharing':'Share this page',onclick:()=>openShare(p)},ic('users',15),p.share?(p.share.perm==='edit'?'Shared · can edit':'Shared · view only'):'Share'):null,
     h('button',{class:'icon-btn star'+(p.fav?' on':''),'aria-label':p.fav?'Remove from favourites':'Add to favourites','aria-pressed':String(!!p.fav),onclick:()=>{p.fav=!p.fav;touch(p);renderView();renderSidebar();}},ic('star',18)),
     h('button',{class:'icon-btn','aria-label':'Page options',onclick:e=>pageMenu(e.currentTarget,p)},ic('more',18)))));
   if(p.kind==='journal') doc.append(moodRow(p));
@@ -1792,7 +1924,7 @@ function blocksEditor(p){
   const tail=h('div',{style:{minHeight:'90px',cursor:'text'},onclick:()=>{ const last=p.blocks[p.blocks.length-1]; if(last&&last.type==='p'&&!plain(last.text).trim()) return focusBlock(last.id,'end'); const nb=blk('p'); p.blocks.push(nb); touch(p); fillBlocks(p); focusBlock(nb.id); }});
   return h('div',{},editorEl,tail);
 }
-function fillBlocks(p){ if(!editorEl) return; const cnt=[]; editorEl.replaceChildren(...p.blocks.map(b=>{ const L=b.indent||0; cnt.length=Math.min(cnt.length,L+1); while(cnt.length<L+1) cnt.push(0); cnt[L]=b.type==='num'?cnt[L]+1:0; return renderBlock(p,b,cnt[L]); })); }
+function fillBlocks(p){ if(!editorEl) return; setTimeout(lockIfViewOnly,0); const cnt=[]; editorEl.replaceChildren(...p.blocks.map(b=>{ const L=b.indent||0; cnt.length=Math.min(cnt.length,L+1); while(cnt.length<L+1) cnt.push(0); cnt[L]=b.type==='num'?cnt[L]+1:0; return renderBlock(p,b,cnt[L]); })); }
 const ROMAN=['i','ii','iii','iv','v','vi','vii','viii','ix','x','xi','xii'];
 function numLabel(n,L){ const k=L%3; if(k===1) return (n<=26?String.fromCharCode(96+n):n)+'.'; if(k===2) return (ROMAN[n-1]||n)+'.'; return n+'.'; }
 function setIndent(p,b,delta){
@@ -1977,7 +2109,7 @@ const SLASH=[
 ];
 function openSlash(p,b,el,q){
   q=(q||'').toLowerCase().trim();
-  const items=SLASH.filter(s=>!q||s.l.toLowerCase().includes(q)||s.kw.includes(q));
+  const items=SLASH.filter(s=>!(SHARED&&['page','db','pagelink'].includes(s.k))).filter(s=>!q||s.l.toLowerCase().includes(q)||s.kw.includes(q));
   if(!slash||slash.b!==b){ closeSlash(); slash={p,b,el,idx:0,box:h('div',{class:'pop slash',role:'listbox','aria-label':'Insert block'})}; document.body.append(slash.box); }
   slash.items=items; slash.el=el; if(slash.idx>=items.length) slash.idx=0;
   drawSlash();
@@ -2014,7 +2146,7 @@ function applySlash(p,b,it){
 /* text formatting toolbar */
 const HL=['yellow','green','blue','pink','orange'];
 let fmtBar=null, lastHL='yellow';
-function fmtTarget(){ const s=getSelection(); if(!s.rangeCount||s.isCollapsed) return null; const r=s.getRangeAt(0); const n=r.commonAncestorContainer; const el=(n.nodeType===1?n:n.parentElement); const ed=el&&el.closest('.blocks .txt[contenteditable="true"], .blocks .tbody, .blocks .st td'); return ed&&ed.contains(r.endContainer)?ed:null; }
+function fmtTarget(){ const s=getSelection(); if(!s.rangeCount||s.isCollapsed) return null; const r=s.getRangeAt(0); const n=r.commonAncestorContainer; const el=(n.nodeType===1?n:n.parentElement); const ed=el&&el.closest('.blocks .txt[contenteditable="true"], .blocks .tbody, .blocks .st td'); return ed&&ed.isContentEditable&&ed.contains(r.endContainer)?ed:null; }
 function selOffsets(el){ const s=getSelection(); const r=s.getRangeAt(0); const a=document.createRange(); a.selectNodeContents(el); a.setEnd(r.startContainer,r.startOffset); const st=a.toString().length; return [st,st+r.toString().length]; }
 function restoreSel(el,[st,en]){ const w=document.createTreeWalker(el,NodeFilter.SHOW_TEXT); let n,pos=0; const r=document.createRange(); let set=false;
   while((n=w.nextNode())){ const L=n.length; if(!set&&st<=pos+L){ r.setStart(n,st-pos); set=true; } if(set&&en<=pos+L){ r.setEnd(n,en-pos); const s=getSelection(); s.removeAllRanges(); s.addRange(r); return; } pos+=L; } }
@@ -2155,7 +2287,7 @@ function pagelinkBlock(p,b){
   b.data=b.data||{};
   const t=b.data.pageId&&S.pages[b.data.pageId];
   if(!b.data.pageId) return h('div',{class:'place',style:{flexDirection:'column',alignItems:'stretch'}},pagePickerList(x=>{ b.data.pageId=x.id; touch(p); fillBlocks(p); },p.id));
-  if(!t||!alive(t)) return h('div',{class:'place'},'This page was moved to trash.');
+  if(!t||!alive(t)) return h('div',{class:'place'},SHARED?'This page isn’t part of what was shared.':'This page was moved to trash.');
   return h('button',{class:'plink',onclick:()=>go('page',t.id)},t.icon?h('span',{},t.icon):ic(kindIcon(t),16),titleOf(t));
 }
 
@@ -2498,6 +2630,8 @@ $('#tb-menu').addEventListener('click',()=>document.body.classList.add('sb-open'
 $('#tb-search').addEventListener('click',openSearch);
 $('#scrim').addEventListener('click',()=>document.body.classList.remove('sb-open'));
 (async function boot(){
+  const shm=(location.hash||'').match(/^#share=([a-z0-9]{20,})/i);
+  if(shm){ await bootShared(shm[1]); return; }
   const saved=await load();
   await metaLoad();
   if(saved&&saved.pages&&saved.spaces){ S=saved; S.ui=S.ui||{open:{},collapsed:{}}; S.countdowns=S.countdowns||[]; S.settings=S.settings||{name:'',theme:'system'}; detectChanges(false); migrate(); save(); }

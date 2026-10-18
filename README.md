@@ -63,6 +63,21 @@ No email, no password: your devices share a private **sync key**.
 觉得密钥可能被别人看到：任何一台装置 → 左下角同步状态 → **Change sync key**（按两次确认）。
 旧密钥马上失效，资料不会动。其他装置会显示 **Sync key changed**，按它再扫一次新的 QR code 就好。
 
+### 分享一页给别人
+
+1. 打开要分享的那一页，按右上角 **Share**
+2. 打开 **Share with a link**
+3. **Anyone with the link can**：选 **View**（只能看）或 **Edit**（可以改、可以加内容）
+4. 要不要连底下的子页面一起分享：勾或不勾 **Include sub-pages**
+5. 按 **Copy**，把连结传给对方
+
+- 对方不用装 App、不用密钥，打开连结就能用
+- 对方**看不到你其他的页面，也拿不到你的同步密钥**
+- 选 Edit 时，对方可以改和加内容，但**不能删除或移动整页**，也不能新增页面（Supabase 那边会挡住）
+- 你随时可以改成 View 或 Edit，对方重新整理就会生效
+- 关掉 **Share with a link**，连结马上失效。再打开会是一个新的连结
+- 分享中的页面，在 sidebar 会有一个小小的人像图示
+
 ---
 
 ## 资料是怎么保护的
@@ -82,7 +97,7 @@ No email, no password: your devices share a private **sync key**.
 
 - **密钥要保管好**：有密钥的人就能打开你的 Bwjspace。如果所有装置同时弄丢，又没有存密钥，资料就拿不回来
 - Supabase 免费方案的 project 如果大约一个星期完全没人用会暂停，资料不会不见，到 Supabase 后台按 **Restore** 就好。每天在用就不会遇到
-- 以后要更新 App：到 GitHub 用新的 `index.html` 取代旧的就好，**不要**覆盖 `config.js`
+- 以后要更新 App：到 GitHub 用新的档案取代旧的就好。如果 `supabase-setup.sql` 也有更新，到 SQL Editor 整份再跑一次（可以重复跑，资料不会受影响）
 
 ## 档案说明
 
