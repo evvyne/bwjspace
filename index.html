@@ -267,6 +267,7 @@ mark{color:inherit;border-radius:3px;padding:0 1px;background:var(--hl-yellow)}
 .fsep{width:1px;height:22px;background:var(--line-2);margin:0 4px}
 .fhl{width:28px;height:34px;display:grid;place-items:center;border-radius:7px}
 .fhl:hover{background:var(--hover)}
+.fhl.on i{box-shadow:0 0 0 2px var(--surface),0 0 0 3.5px var(--ink)}
 .fhl i{display:block;width:18px;height:18px;border-radius:5px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
 
 /* to-do extras */
@@ -877,6 +878,10 @@ const fmtLong=s=>parseYmd(s).toLocaleDateString('en-GB',{weekday:'long',day:'num
 const fmtShort=s=>parseYmd(s).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
 const fmtMonth=s=>parseYmd(s).toLocaleDateString('en-GB',{month:'long',year:'numeric'});
 function ago(t){const s=(Date.now()-t)/1000; if(s<60)return 'just now'; if(s<3600)return Math.floor(s/60)+' min ago'; if(s<86400)return Math.floor(s/3600)+' h ago'; const d=Math.floor(s/86400); return d===1?'yesterday':d+' days ago';}
+const APP_VER='2026.10.19-5';
+/* tell you when a newer version is on GitHub, so every device runs the same version */
+async function checkUpdate(){ if(location.protocol!=='https:') return; try{ const t=await (await fetch('index.html',{cache:'no-store'})).text(); const m=t.match(/APP_VER='([^']+)'/); if(m&&m[1]!==APP_VER&&!checkUpdate.shown){ checkUpdate.shown=true; toast('A new version of Bwjspace is ready.',{label:'Reload',fn:()=>location.reload()}); } }catch(e){} }
+setTimeout(checkUpdate,4000); setInterval(()=>{ if(!document.hidden) checkUpdate(); },10*60000); document.addEventListener('visibilitychange',()=>{ if(!document.hidden) checkUpdate(); });
 const COLORS=['teal','coral','violet','blue','rose','slate','amber','green','red','orange','mustard','olive','sky','navy','purple','plum','pink','brown','sand','charcoal'];
 const PALETTE=['red','coral','orange','amber','mustard','olive','green','teal','sky','blue','navy','violet','purple','plum','rose','pink','brown','sand','slate','charcoal'];
 const cap=x=>x[0].toUpperCase()+x.slice(1);
@@ -1036,7 +1041,8 @@ async function baseLoad(){ try{ const d=await idb(); SYBASE=await new Promise(re
 function baseSave(){ clearTimeout(baseT); baseT=setTimeout(async()=>{ try{ const d=await idb(); d.transaction('kv','readwrite').objectStore('kv').put(SYBASE,'syncbase'); }catch(e){} },400); }
 function replaceIn(target,src){ Object.keys(target).forEach(k=>delete target[k]); Object.assign(target,src); }
 function cl(o){ return o==null?o:JSON.parse(JSON.stringify(o)); }
-function eqJ(a,b){ return JSON.stringify(a)===JSON.stringify(b); }
+function stable(o){ if(Array.isArray(o)) return '['+o.map(stable).join(',')+']'; if(o&&typeof o==='object') return '{'+Object.keys(o).filter(k=>o[k]!==undefined).sort().map(k=>JSON.stringify(k)+':'+stable(o[k])).join(',')+'}'; return JSON.stringify(o===undefined?null:o); }
+function eqJ(a,b){ return stable(a)===stable(b); }
 /* base = the version both sides started from, mine = this device, theirs = the cloud.
    Different paragraphs: both changes kept. Same paragraph changed differently: both versions kept, marked. */
 function merge3(base,mine,theirs){
@@ -1066,7 +1072,9 @@ SY.lastType=0; SY.composing=false;
 document.addEventListener('input',()=>{ SY.lastType=Date.now(); },true);
 document.addEventListener('compositionstart',()=>{ SY.composing=true; },true);
 document.addEventListener('compositionend',()=>{ SY.composing=false; SY.lastType=Date.now(); },true);
-function typedRecently(){ return SY.composing||Date.now()-SY.lastType<2500; }
+document.addEventListener('focusout',()=>{ SY.composing=false; },true);
+/* phone keyboards (and Chinese input) keep a word "in progress" while you type; that only counts while you're actually typing */
+function typedRecently(){ const idle=Date.now()-SY.lastType; return idle<2500||(SY.composing&&idle<6000); }
 function onPage(pid){ return R.v==='page'&&R.id===pid; }
 const EDSEL='[contenteditable="true"],[contenteditable="plaintext-only"],input,textarea,select';
 function caretSave(){
@@ -1110,8 +1118,8 @@ function takeRemote(row){
     if(onPage(pid)&&typedRecently()){ SY.deferred[id]=row; return false; }
     delete SY.deferred[id];
     if(row.deleted&&mine&&!m.x){ m.b=row.updated; SY.again=true; return false; }   // deleted elsewhere but edited here: keep the edited one
-    if(mine&&!m.x&&!row.deleted&&SYBASE[pid]){                    // combine paragraph by paragraph
-      const r=merge3(SYBASE[pid],mine,row.data);
+    if(mine&&!m.x&&!row.deleted){                                  // combine paragraph by paragraph (no saved starting point: keep both versions of anything that differs)
+      const r=merge3(SYBASE[pid]||{blocks:[]},mine,row.data);
       applyRemote(row); replaceIn(S.pages[pid],r.page);            // now "dirty" against the cloud version -> the combined page uploads
       SY.dups=(SY.dups||0)+r.conflicts; return true; }
     if(mine&&!m.x&&!row.deleted&&JSON.stringify(mine)!==JSON.stringify(row.data)){
@@ -1376,7 +1384,7 @@ async function sharedPull(first){
     if(SHARED.base[pid]===it.updated) return;
     if(S.pages[pid]&&onPage(pid)&&typedRecently()) return;  // wait until you pause typing
     if(S.pages[pid]&&SHARED.dirty.has(pid)){                // both changed it: combine paragraph by paragraph
-      const r=merge3(SHARED.baseData[pid],S.pages[pid],it.data); replaceIn(S.pages[pid],r.page); dups+=r.conflicts; merged=true;
+      const r=merge3(SHARED.baseData[pid]||{blocks:[]},S.pages[pid],it.data); replaceIn(S.pages[pid],r.page); dups+=r.conflicts; merged=true;
     } else { if(S.pages[pid]) replaceIn(S.pages[pid],it.data); else S.pages[pid]=it.data; SHARED.hash[pid]=JSON.stringify(S.pages[pid]); }
     SHARED.base[pid]=it.updated; SHARED.baseData[pid]=cl(it.data); changed=true; if(onPage(pid)) cur=true; });
   Object.keys(S.pages).forEach(pid=>{ if(!seen.has(pid)){ delete S.pages[pid]; changed=true; } });
@@ -1395,6 +1403,7 @@ function sharedChanged(quiet){
 }
 async function sharedPush(){
   if(!SHARED||SHARED.busy||!SHARED.dirty.size) return;
+  if(typedRecently()){ clearTimeout(SHARED.timer); SHARED.timer=setTimeout(sharedPush,1200); return; }   // save when you pause, so the combine step isn't skipped
   SHARED.busy=true; sharedBar();
   sharedChanged(true);
   const ids=[...SHARED.dirty]; const rows=ids.map(pid=>({id:'p:'+pid,data:cl(S.pages[pid]),updated:Date.now(),base:SHARED.base[pid]||0}));
@@ -1407,11 +1416,8 @@ async function sharedPush(){
     if(!SHARED.conflict) SHARED.tries=0;
   }catch(e){ const m=(e&&e.message)||''; if(/view only/i.test(m)){ SHARED.perm='view'; SHARED.dirty.clear(); toast('This link was changed to view only.'); safeRender(); } else if(/link off/i.test(m)){ SHARED.dead=true; sharedMessage('This link is turned off','Ask the person who shared it for a new link.'); } else { SHARED.timer=setTimeout(sharedPush,15000); } }
   finally{ SHARED.busy=false; if(!SHARED.dead) sharedBar(); }
-  if(SHARED.conflict){ SHARED.conflict=false; SHARED.tries++;
-    if(SHARED.tries<=4){ await sharedPull(); clearTimeout(SHARED.timer); SHARED.timer=setTimeout(sharedPush,300+Math.random()*700); }
-    else {                                                            // keeps failing: last resort, give a copy of your text
-      SHARED.tries=0; SHARED.dirty.forEach(pid=>{ SHARED.mine[pid]=cl(S.pages[pid]); delete SHARED.base[pid]; }); SHARED.dirty.forEach(pid=>{ delete SHARED.hash[pid]; }); SHARED.dirty.clear();
-      await sharedPull(); toast('This page couldn’t be saved because it keeps changing. You’re seeing the latest version.',{label:'Show my version',fn:showMine}); } }
+  if(SHARED.conflict){ SHARED.conflict=false; SHARED.tries++;   // someone saved first: combine with theirs and save again. Your text is never dropped.
+    await sharedPull(); clearTimeout(SHARED.timer); SHARED.timer=setTimeout(sharedPush,SHARED.tries<6?300+Math.random()*700:4000+Math.random()*4000); }
 }
 function showMine(){
   const lines=[]; Object.values(SHARED.mine).forEach(p=>{ lines.push('# '+titleOf(p)); (p.blocks||[]).forEach(b=>{ const t=plain(b.text||''); if(t.trim()) lines.push(t); if(b.data&&b.data.rows) b.data.rows.forEach(r=>lines.push(r.map(plain).join(' | '))); }); lines.push(''); });
@@ -2268,12 +2274,36 @@ function restoreSel(el,[st,en]){ const w=document.createTreeWalker(el,NodeFilter
 function unwrap(n){ n.replaceWith(...n.childNodes); }
 function applyHL(el,color){
   const s=getSelection(); if(!s.rangeCount) return; const off=selOffsets(el); const r=s.getRangeAt(0);
-  if(color===null){ [...el.querySelectorAll('mark')].forEach(m=>{ if(r.intersectsNode(m)) unwrap(m); }); }
+  if(color!==null&&selHL(el)===color) color=null;              // same colour again = take it off
+  if(color===null) unmarkRange(el,r);
   else{ const frag=r.extractContents(); frag.querySelectorAll('mark').forEach(unwrap); const m=document.createElement('mark'); m.className='hl-'+color; m.append(frag); r.insertNode(m); lastHL=color; }
   [...el.querySelectorAll('mark')].forEach(m=>{ if(!m.textContent) m.remove(); });
   el.normalize(); restoreSel(el,off); el.dispatchEvent(new Event('input'));
 }
-function inMark(){ const s=getSelection(); if(!s.rangeCount) return false; const n=s.anchorNode; const e=n&&(n.nodeType===1?n:n.parentElement); return !!(e&&e.closest('mark')); }
+/* remove highlight only from the selected part; the rest of the highlight stays */
+function unmarkRange(el,r){
+  [...el.querySelectorAll('mark')].forEach(m=>{ if(!m.isConnected||!markHit(m,r)) return;
+    let mr=document.createRange(); mr.selectNodeContents(m);
+    if(r.compareBoundaryPoints(Range.START_TO_START,mr)>0){ const pre=document.createRange(); pre.setStart(mr.startContainer,mr.startOffset); pre.setEnd(r.startContainer,r.startOffset); const a=m.cloneNode(false); a.append(pre.extractContents()); m.before(a); }
+    mr=document.createRange(); mr.selectNodeContents(m);
+    if(r.compareBoundaryPoints(Range.END_TO_END,mr)<0){ const post=document.createRange(); post.setStart(r.endContainer,r.endOffset); post.setEnd(mr.endContainer,mr.endOffset); const b=m.cloneNode(false); b.append(post.extractContents()); m.after(b); }
+    unwrap(m); });
+}
+/* does the selection cover any highlighted letters of this mark? */
+function markHit(m,r){ if(!r.intersectsNode(m)) return false; const mr=document.createRange(); mr.selectNodeContents(m);
+  const x=document.createRange();
+  if(r.compareBoundaryPoints(Range.START_TO_START,mr)>0) x.setStart(r.startContainer,r.startOffset); else x.setStart(mr.startContainer,mr.startOffset);
+  if(r.compareBoundaryPoints(Range.END_TO_END,mr)<0) x.setEnd(r.endContainer,r.endOffset); else x.setEnd(mr.endContainer,mr.endOffset);
+  return !x.collapsed&&x.toString().length>0; }
+/* the highlight colour of the whole selection, if it is all one colour */
+function selHL(el){ const s=getSelection(); if(!s.rangeCount) return null; const r=s.getRangeAt(0); let col=null, any=false, ok=true;
+  const w=document.createTreeWalker(el,NodeFilter.SHOW_TEXT); let n;
+  while((n=w.nextNode())){ if(!r.intersectsNode(n)) continue;
+    const st=n===r.startContainer?r.startOffset:0, en=n===r.endContainer?r.endOffset:n.length; if(en<=st) continue;
+    any=true; const m=n.parentElement.closest('mark'); const c=m&&el.contains(m)?((m.className.match(/hl-(\w+)/)||[])[1]||'yellow'):null;
+    if(!c){ ok=false; break; } if(col&&col!==c){ ok=false; break; } col=c; }
+  return any&&ok?col:null; }
+function inMark(){ const s=getSelection(); if(!s.rangeCount) return false; const el=fmtTarget(); if(!el) return false; const r=s.getRangeAt(0); return [...el.querySelectorAll('mark')].some(m=>markHit(m,r)); }
 function fmtCmd(el,cmd){ document.execCommand(cmd,false,null); el.dispatchEvent(new Event('input')); drawFmt(); }
 function drawFmt(){
   const el=fmtTarget(); if(!el){ hideFmt(); return; }
@@ -2285,7 +2315,7 @@ function drawFmt(){
     B('Bold','bold',h('b',{},'B'),mac+'B'), B('Italic','italic',h('i',{style:{fontFamily:'var(--f-display)',fontSize:'17px'}},'I'),mac+'I'),
     B('Underline','underline',h('u',{},'U'),mac+'U'), B('Strikethrough','strikeThrough',h('s',{},'S'),mac+'Shift+X'),
     h('span',{class:'fsep'}),
-    HL.map(c=>h('button',{class:'fhl','aria-label':'Highlight '+c,title:'Highlight '+c,onclick:()=>{ applyHL(el,c); drawFmt(); }},h('i',{class:'hl-'+c}))),
+    HL.map(c=>h('button',{class:'fhl'+(selHL(el)===c?' on':''),'aria-label':'Highlight '+c,'aria-pressed':String(selHL(el)===c),title:selHL(el)===c?'Remove highlight':'Highlight '+c,onclick:()=>{ applyHL(el,c); drawFmt(); }},h('i',{class:'hl-'+c}))),
     inMark()?h('button',{class:'fb','aria-label':'Remove highlight',title:'Remove highlight',onclick:()=>{ applyHL(el,null); drawFmt(); }},ic('x',14)):null].flat().filter(Boolean));
   const r=getSelection().getRangeAt(0).getBoundingClientRect();
   const bw=fmtBar.offsetWidth, bh=fmtBar.offsetHeight, touchy=matchMedia('(hover:none)').matches;
@@ -2779,7 +2809,8 @@ function openSettings(){
       const list=h('div',{class:'bk-list'},h('p',{class:'muted'},'Loading…')); box.append(list);
       listBackups().then(keys=>{ list.replaceChildren(...(keys.length?keys.map(k=>{ const d=String(k).slice(3); let armed=false; const b=h('button',{class:'btn sm',onclick:async()=>{ if(!armed){ armed=true; b.textContent='Click again to restore'; return; } const data=await readBackup(k); if(!data||!data.pages){ toast("That backup couldn't be read"); return; } const ui=S.ui; S=data; S.ui=ui||S.ui||{open:{},collapsed:{}}; migrate(); save(); closeModal(); R={v:'home'}; renderSidebar(); renderView(); toast('Restored the backup from '+fmtShort(d)); }},'Restore'); return h('div',{class:'bk-row'},h('span',{},fmtLong(d)),b); }):[h('p',{class:'muted'},'The first backup is made today.')])); });
       return box; })(),
-    h('div',{class:'msec'},h('h3',{},'Start over'),h('p',{},'Clears this device only. If you use cloud sync, your cloud copy is kept and you can connect again with your sync key.'),reset)
+    h('div',{class:'msec'},h('h3',{},'Start over'),h('p',{},'Clears this device only. If you use cloud sync, your cloud copy is kept and you can connect again with your sync key.'),reset),
+    h('p',{class:'muted',style:{margin:'4px 0 0',fontSize:'12.5px'}},'Version '+APP_VER)
   ]);
 }
 

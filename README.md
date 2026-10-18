@@ -75,6 +75,7 @@ No email, no password: your devices share a private **sync key**.
 - 对方**看不到你其他的页面，也拿不到你的同步密钥**
 - 选 Edit 时，对方可以改和加内容，但**不能删除或移动整页**，也不能新增页面（Supabase 那边会挡住）
 - 你随时可以改成 View 或 Edit，对方重新整理就会生效
+- 每台装置要用同一个版本：⚙ Settings 最下面可以看到版本号。GitHub 有新版本时，App 会提示 **Reload**
 - 关掉 **Share with a link**，连结马上失效。再打开会是一个新的连结
 - 分享中的页面，在 sidebar 会有一个小小的人像图示
 - 两个人可以同时编辑：改不同段落会自动合并，改到同一段会两个版本都留着让你挑
