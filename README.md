@@ -99,6 +99,9 @@ No email, no password: your devices share a private **sync key**.
 
 - 新增页面时选 **Content board**：Idea → Filming → Editing → Posted，可以拖卡片或按卡片下面的按钮换阶段
 - 上面可以选平台，也可以换成 **Calendar** 看
+- 点一张卡片：电脑会在右边打开侧栏，手机会弹出一张卡片。阶段和平台直接点按钮选，日期直接打字，下面写 caption
+- 点 **Edit stages / Edit platforms** 可以加、改名、换颜色、拖 ⋮⋮ 换顺序、删掉。删掉还有 post 的阶段时，会先问要把 post 搬去哪里
+- 平台也可以在卡片里按 **+ Add** 直接加
 
 ### 照片
 
