@@ -104,6 +104,19 @@ No email, no password: your devices share a private **sync key**.
 - 平台也可以在卡片里按 **+ Add** 直接加
 - 在 **Calendar** 点 post 也会打开侧栏（手机是弹出卡片）
 
+### Studio calendar 和 Invoices
+
+- 在 Studio 按 **+** 新增页面，选 **Studio calendar**。电脑可以用周（Week）或月（Month）看，手机一天一天往下看
+- 按 **New booking**，或直接点日历上空的时间。可以选 Status、日期、开始时间、套餐（3 / 6 / 12 / 24 小时）、Extra hours（RM 250 一小时）、Client、WhatsApp、订金和 notes
+- WhatsApp 写电话号码的话，按 **Chat** 会直接打开 WhatsApp
+- 按 **Make invoice →** 会自动开一张 invoice（第一次会自动建好 **Invoices** 页面）
+- Invoice 号码会照最新那张自动加 1。你改号码的话，下一张就照你改的号码继续加。号码重复的话会提醒你
+- Due date 默认是开单后 7 天。勾 **Minus deposit paid** 才会显示 Subtotal / Deposit paid / Balance due，没勾就只有一行 TOTAL
+- **Download PDF** 会打开打印画面，选 "Save as PDF" 就好，档名会是 "R00005 - 客户名字"
+- **Send on WhatsApp** 会打开 WhatsApp，附上金额、due date 和银行资料的讯息（PDF 要自己附上）
+- **Edit template** 可以改 logo、公司地址、银行资料、7 条 terms 和上一张的号码
+- Invoice 改成 **Paid**，那个 booking 在日历上也会变成 Paid（绿色）
+
 ### Database 表格
 
 - 表格里的选项格（例如 Category）点一下会弹出一排按钮，点一个就选好
