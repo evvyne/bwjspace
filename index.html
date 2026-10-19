@@ -1028,7 +1028,7 @@ const fmtLong=s=>parseYmd(s).toLocaleDateString('en-GB',{weekday:'long',day:'num
 const fmtShort=s=>parseYmd(s).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
 const fmtMonth=s=>parseYmd(s).toLocaleDateString('en-GB',{month:'long',year:'numeric'});
 function ago(t){const s=(Date.now()-t)/1000; if(s<60)return 'just now'; if(s<3600)return Math.floor(s/60)+' min ago'; if(s<86400)return Math.floor(s/3600)+' h ago'; const d=Math.floor(s/86400); return d===1?'yesterday':d+' days ago';}
-const APP_VER='2026.10.19-19';
+const APP_VER='2026.10.19-20';
 /* tell you when a newer version is on GitHub, so every device runs the same version */
 async function checkUpdate(){ if(location.protocol!=='https:') return; try{ const t=await (await fetch('index.html',{cache:'no-store'})).text(); const m=t.match(/APP_VER='([^']+)'/); if(m&&m[1]!==APP_VER&&!checkUpdate.shown){ checkUpdate.shown=true; toast('A new version of Bwjspace is ready.',{label:'Reload',stay:true,fn:()=>location.reload()}); } }catch(e){} }
 setTimeout(checkUpdate,4000); setInterval(()=>{ if(!document.hidden) checkUpdate(); },10*60000); document.addEventListener('visibilitychange',()=>{ if(!document.hidden) checkUpdate(); });
@@ -1648,6 +1648,7 @@ function sharedNav(){
 
 /* ===== photos: kept in your Supabase Storage instead of inside the page ===== */
 const IMG={busy:false,folder:null,bucket:'bwj-images'};
+function inlineImageCount(){ let n=0; Object.values(S.pages).forEach(p=>(p.blocks||[]).forEach(b=>{ if(b.type==='image'&&b.data&&typeof b.data.src==='string'&&b.data.src.startsWith('data:')) n++; })); return n; }
 function dataUrlToBlob(u){ const m=u.match(/^data:([^;,]+)(;base64)?,(.*)$/); if(!m) return null; const bin=m[2]?atob(m[3]):decodeURIComponent(m[3]); const a=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) a[i]=bin.charCodeAt(i); return new Blob([a],{type:m[1]}); }
 async function uploadInlineImages(){
   if(IMG.busy||SHARED||!SY.client||!SY.key||!navigator.onLine||!SY.client.storage) return; IMG.busy=true;
@@ -1661,13 +1662,13 @@ async function uploadInlineImages(){
       const ext=blob.type==='image/png'?'png':blob.type==='image/webp'?'webp':blob.type==='image/gif'?'gif':'jpg';
       const path=IMG.folder+'/'+uid()+uid()+'.'+ext;
       const {error}=await SY.client.storage.from(IMG.bucket).upload(path,blob,{contentType:blob.type,cacheControl:'31536000',upsert:false});
-      if(error){ IMG.failed=(error.message||'')+''; break; }
+      if(error){ IMG.failed=(error.message||error.error||JSON.stringify(error))+''; break; }
       const url=SY.client.storage.from(IMG.bucket).getPublicUrl(path).data.publicUrl;
       if(b.data.src===src){ b.data.src=url; touch(p); n++; }
     } }
-    if(n) scheduleSync(1500);
+    if(n){ IMG.failed=''; IMG.moved=(IMG.moved||0)+n; scheduleSync(1500); }
   }catch(e){ IMG.failed=(e&&e.message)||String(e); }
-  finally{ IMG.busy=false; }
+  finally{ IMG.busy=false; if(IMG.failed&&!IMG.told){ IMG.told=true; toast('Photos couldn’t be moved to Storage yet: '+IMG.failed.slice(0,90),{label:'Details',fn:openSettings}); } }
 }
 
 /* ===== page history: the last 10 days of each page ===== */
@@ -3495,7 +3496,9 @@ function openSettings(){
     h('div',{class:'msec'},h('h3',{},'Backup'),h('p',{},'Your pages are saved in this browser on this device. Copy a backup now and then, and paste it here to restore.'),
       h('div',{class:'row'},h('button',{class:'btn sm',onclick:()=>{ const j=JSON.stringify(S); out.value=j; out.hidden=false; copyText(j); }},ic('copy',14),'Copy backup'),h('button',{class:'btn sm',onclick:()=>{ const j=JSON.stringify(S,null,1); try{ const a=h('a',{href:URL.createObjectURL(new Blob([j],{type:'application/json'})),download:'bwjspace-backup-'+todayStr()+'.json'}); document.body.append(a); a.click(); a.remove(); }catch(_){ } out.value=j; out.hidden=false; }},ic('download',14),'Download file')),out,
       inn,h('div',{class:'row'},h('button',{class:'btn sm',onclick:()=>{ try{ const d=JSON.parse(inn.value); if(!d||!d.pages||!d.spaces) throw 0; S=d; S.ui=S.ui||{open:{},collapsed:{}}; S.settings=S.settings||{name:'',theme:'system'}; migrate(); save(); closeModal(); R={v:'home'}; applyTheme(); renderSidebar(); renderView(); toast('Backup restored'); }catch(_){ msg.textContent='That backup could not be read. Paste the whole text you copied.'; msg.hidden=false; msg.style.color='var(--danger)'; } }},'Restore backup')),msg),
-    h('div',{class:'msec'},h('h3',{},'Cloud sync'),h('p',{},SY.key?'This device is syncing with your sync key.':'Keep your phone and computer in sync.'),h('button',{class:'btn sm',onclick:openSync},ic('cloud',14),SY.key?'Sync settings':'Set up sync')),
+    h('div',{class:'msec'},h('h3',{},'Cloud sync'),h('p',{},SY.key?'This device is syncing with your sync key.':'Keep your phone and computer in sync.'),h('button',{class:'btn sm',onclick:openSync},ic('cloud',14),SY.key?'Sync settings':'Set up sync'),
+      SY.key?(()=>{ const n=inlineImageCount(); const st=h('p',{class:'muted',style:{margin:'10px 0 0',fontSize:'13px'}},n?'Photos: '+n+' still inside pages, waiting to move to Storage.':'Photos: all saved in Storage.',IMG.failed?h('span',{style:{display:'block',color:'var(--danger)'}},'Last problem: '+IMG.failed):null);
+        const btn=n?h('button',{class:'btn sm',style:{marginTop:'8px'},onclick:async()=>{ btn.disabled=true; btn.textContent='Moving…'; IMG.told=true; await uploadInlineImages(); openSettings(); }},'Move photos now'):null; return h('div',{},st,btn); })():null),
     (()=>{ const box=h('div',{class:'msec'},h('h3',{},'Automatic backups'),h('p',{},'Bwjspace saves a copy of everything on this device once a day and keeps the last 7 days.'));
       const list=h('div',{class:'bk-list'},h('p',{class:'muted'},'Loading…')); box.append(list);
       listBackups().then(keys=>{ list.replaceChildren(...(keys.length?keys.map(k=>{ const d=String(k).slice(3); let armed=false; const b=h('button',{class:'btn sm',onclick:async()=>{ if(!armed){ armed=true; b.textContent='Click again to restore'; return; } const data=await readBackup(k); if(!data||!data.pages){ toast("That backup couldn't be read"); return; } const ui=S.ui; S=data; S.ui=ui||S.ui||{open:{},collapsed:{}}; migrate(); save(); closeModal(); R={v:'home'}; renderSidebar(); renderView(); toast('Restored the backup from '+fmtShort(d)); }},'Restore'); return h('div',{class:'bk-row'},h('span',{},fmtLong(d)),b); }):[h('p',{class:'muted'},'The first backup is made today.')])); });

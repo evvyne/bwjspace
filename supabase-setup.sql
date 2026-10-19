@@ -498,3 +498,7 @@ on conflict (id) do update set public = true, file_size_limit = excluded.file_si
 drop policy if exists "bwj upload images" on storage.objects;
 create policy "bwj upload images" on storage.objects for insert to anon, authenticated
   with check (bucket_id = 'bwj-images' and public.bwj_img_folder_ok((storage.foldername(name))[1]));
+-- uploading also reads the new file back, so allow reading inside your private folder
+drop policy if exists "bwj read images" on storage.objects;
+create policy "bwj read images" on storage.objects for select to anon, authenticated
+  using (bucket_id = 'bwj-images' and public.bwj_img_folder_ok((storage.foldername(name))[1]));
