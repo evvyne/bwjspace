@@ -542,10 +542,30 @@ table.st.rz-on{user-select:none}
 .share-b{gap:6px}
 .share-b.on{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
 .shared-dot{display:inline-flex;color:var(--accent);margin-left:4px;flex:none}
+.shp{border:1px solid var(--line);border-radius:10px;padding:6px}
+.shp-head{display:flex;align-items:center;gap:8px;padding:4px 8px 6px;font-size:13.5px}
+.shp-head b{flex:1;font-weight:600}
+.shp-list{max-height:260px;overflow-y:auto}
+.shp-row{display:flex;align-items:center;gap:9px;min-height:38px;padding-right:8px;border-radius:8px;cursor:pointer;font-size:14px}
+.shp-row:hover{background:var(--hover)}
+.shp-row.fixed{cursor:default}
+.shp-row input{width:17px;height:17px;accent-color:var(--accent);flex:none}
+.shp-t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.shp-ic{width:18px;text-align:center}
+.tgl.sm{transform:scale(.85);transform-origin:left center;flex:none}
+.sh-wrap{display:flex;align-items:flex-start;min-height:100%}
+.sh-main{flex:1;min-width:0}
+.sh-nav{width:230px;flex:none;position:sticky;top:0;align-self:stretch;min-height:100%;background:var(--side);border-right:1px solid var(--line);padding:16px 10px;display:flex;flex-direction:column;gap:2px;box-sizing:border-box}
+.sh-nav-h{display:flex;align-items:center;gap:9px;padding:4px 8px 10px;font-weight:700;font-size:14.5px}
+.sh-nav-i{display:flex;align-items:center;gap:8px;min-height:34px;border-radius:7px;padding-right:8px;color:var(--ink-2);font-size:14px;text-align:left}
+.sh-nav-i:hover{background:var(--hover)}
+.sh-nav-i.on{background:var(--surface);color:var(--ink)}
+.sh-nav-i .tt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:760px){ .sh-wrap{flex-direction:column} .sh-nav{width:auto;min-height:0;position:static;flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line);padding:8px;gap:4px} .sh-nav-h{display:none} .sh-nav-i{padding-left:10px!important;white-space:nowrap;flex:none} }
 .share-box{display:flex;flex-direction:column;gap:12px;border:1px solid var(--line);border-radius:10px;padding:12px 14px}
-.sw{width:42px;height:24px;border-radius:999px;background:var(--line-2);position:relative;flex:none;cursor:pointer}
-.sw::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .15s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
-.sw.on{background:var(--accent)}.sw.on::after{left:21px}
+.tgl{width:42px;height:24px;border-radius:999px;background:var(--line-2);position:relative;flex:none;cursor:pointer}
+.tgl::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .15s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.tgl.on{background:var(--accent)}.tgl.on::after{left:21px}
 .shared-mode #sb,.shared-mode #scrim,.shared-mode #tb-menu,.shared-mode #tb-search,.shared-mode .ttl-tools>:not(.cm-tool){display:none!important}
 .shared-mode .ttl-tools .cm-tool[hidden]{display:none!important}
 .share-bar{display:flex;align-items:center;gap:8px;padding:8px max(16px,env(safe-area-inset-right,0px)) 8px max(16px,env(safe-area-inset-left,0px));font-size:13.5px;border-bottom:1px solid var(--line)}
@@ -963,7 +983,7 @@ const fmtLong=s=>parseYmd(s).toLocaleDateString('en-GB',{weekday:'long',day:'num
 const fmtShort=s=>parseYmd(s).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
 const fmtMonth=s=>parseYmd(s).toLocaleDateString('en-GB',{month:'long',year:'numeric'});
 function ago(t){const s=(Date.now()-t)/1000; if(s<60)return 'just now'; if(s<3600)return Math.floor(s/60)+' min ago'; if(s<86400)return Math.floor(s/3600)+' h ago'; const d=Math.floor(s/86400); return d===1?'yesterday':d+' days ago';}
-const APP_VER='2026.10.19-16';
+const APP_VER='2026.10.19-17';
 /* tell you when a newer version is on GitHub, so every device runs the same version */
 async function checkUpdate(){ if(location.protocol!=='https:') return; try{ const t=await (await fetch('index.html',{cache:'no-store'})).text(); const m=t.match(/APP_VER='([^']+)'/); if(m&&m[1]!==APP_VER&&!checkUpdate.shown){ checkUpdate.shown=true; toast('A new version of Bwjspace is ready.',{label:'Reload',stay:true,fn:()=>location.reload()}); } }catch(e){} }
 setTimeout(checkUpdate,4000); setInterval(()=>{ if(!document.hidden) checkUpdate(); },10*60000); document.addEventListener('visibilitychange',()=>{ if(!document.hidden) checkUpdate(); });
@@ -1400,45 +1420,72 @@ async function readBackup(k){ try{ const d=await idb(); return await new Promise
 let SHARED=null;   // set when this page was opened from a share link
 function newShareToken(){ const A='abcdefghijkmnpqrstuvwxyz23456789'; const b=new Uint8Array(28); crypto.getRandomValues(b); let s=''; for(let i=0;i<28;i++) s+=A[b[i]%32]; return 'shr'+s; }
 function shareLink(t,forName){ const by=(S&&S.settings&&S.settings.name||'').trim(); return location.origin+location.pathname+'#share='+t+(by?'&by='+encodeURIComponent(by):'')+(forName?'&n='+encodeURIComponent(forName):''); }
-function openShare(p){
+/* share a page (with the sub-pages you pick) or a whole space (with the pages you pick) */
+function shareScope(t){ const out=[]; const walk=(pg,d)=>{ out.push({p:pg,d}); if(pg.kind!=='db') children(pg.id).forEach(k=>walk(k,d+1)); };
+  if(t.space) roots(t.space.id).forEach(r=>walk(r,0)); else walk(t.page,0); return out; }
+function shareTicked(sh,scope,rootId){ const ids=scope.map(x=>x.p.id);
+  if(sh.only) return new Set(sh.only.filter(id=>ids.includes(id)).concat(rootId?[rootId]:[]));
+  if(sh.skip) return new Set(ids.filter(id=>!sh.skip.includes(id)));
+  return new Set(sh.subs===false&&rootId?[rootId]:ids); }
+function openShareSpace(sp){ openShare({__space:sp}); }
+function openShare(arg){
+  const t=arg&&arg.__space?{space:arg.__space}:{page:arg}; const obj=t.space||t.page;
+  const rootId=t.space?null:obj.id, srvId=t.space?'space:'+obj.id:obj.id, name=t.space?obj.name:titleOf(obj), isDb=!t.space&&obj.kind==='db';
   const body=[];
   if(!SY.client||!SY.key){
     body.push(h('p',{style:{margin:0}},'Sharing uses your cloud copy, so turn on cloud sync first.'),h('div',{class:'row',style:{justifyContent:'flex-end'}},h('button',{class:'btn pri',onclick:openSync},ic('cloud',15),'Set up sync')));
-    modal('Share this page',body); return;
+    modal(t.space?'Share this space':'Share this page',body); return;
   }
-  const sh=p.share||null, on=!!sh;
+  const sh=obj.share||null, on=!!sh;
+  const scope=isDb?[]:shareScope(t);
   const msg=h('p',{class:'pm-err',hidden:true});
   const call=async(fn)=>{ msg.hidden=true; try{ await fn(); }catch(e){ msg.textContent="Couldn't update sharing: "+((e&&e.message)||e); msg.hidden=false; } };
-  const apply=async(next)=>{ await rpc('share_set',{p_key:SY.key,p_page:p.id,p_token:next.token,p_perm:next.perm,p_subs:next.subs}); p.share=next; touch(p); syncNow(); renderSidebar(); renderView(); };
-  const sw=h('button',{class:'sw'+(on?' on':''),'aria-label':'Share with a link','aria-pressed':String(on),onclick:()=>call(async()=>{
-    if(on){ await rpc('share_stop',{p_key:SY.key,p_page:p.id}); delete p.share; touch(p); syncNow(); renderSidebar(); renderView(); toast('Sharing turned off. The old link no longer works.'); }
-    else { await apply({token:newShareToken(),perm:'view',subs:true}); toast('Link created'); }  // a database always includes its cards
-    openShare(p); })});
+  const store=next=>{ if(next) obj.share=next; else delete obj.share; if(t.space) save(); else touch(obj); syncNow(); renderSidebar(); renderView(); };
+  const apply=async(next)=>{
+    const auto=!!next.auto, ids=scope.map(x=>x.p.id), tick=next.ticked||[...shareTicked(next,scope,rootId)];
+    const only=isDb?null:(auto?null:tick), skip=isDb?null:(auto?ids.filter(id=>!tick.includes(id)):null);
+    const clean={token:next.token,perm:next.perm,subs:true,auto}; if(only) clean.only=only; if(skip) clean.skip=skip;
+    await rpc('share_set',{p_key:SY.key,p_page:srvId,p_token:clean.token,p_perm:clean.perm,p_subs:true,p_only:only,p_skip:skip}); store(clean); };
+  const sw=h('button',{class:'tgl'+(on?' on':''),'aria-label':'Share with a link','aria-pressed':String(on),onclick:()=>call(async()=>{
+    if(on){ await rpc('share_stop',{p_key:SY.key,p_page:srvId}); store(null); toast('Sharing turned off. The old link no longer works.'); }
+    else { await apply({token:newShareToken(),perm:'view',auto:false,ticked:scope.map(x=>x.p.id)}); toast('Link created'); }
+    openShare(arg); })});
   body.push(h('div',{class:'row'},h('span',{style:{flex:1,fontWeight:500}},'Share with a link'),sw));
   if(on){
     const perm=h('select',{class:'field',id:'sh-perm','aria-label':'Anyone with the link can',style:{width:'auto',height:'34px'}},h('option',{value:'view'},'View'),h('option',{value:'comment'},'Comment'),h('option',{value:'edit'},'Edit')); perm.value=sh.perm;
-    perm.addEventListener('change',()=>call(async()=>{ await apply(Object.assign({},sh,{perm:perm.value})); openShare(p); toast(perm.value==='edit'?'People with the link can now edit':perm.value==='comment'?'People with the link can now comment':'People with the link can now only view'); }));
-    const isDb=p.kind==='db';
-    const subs=h('input',{type:'checkbox',id:'sh-subs',checked:!!sh.subs});
-    subs.addEventListener('change',()=>call(async()=>{ await apply(Object.assign({},sh,{subs:subs.checked})); openShare(p); }));
-    const kids=children(p.id);
+    perm.addEventListener('change',()=>call(async()=>{ await apply(Object.assign({},sh,{perm:perm.value})); openShare(arg); toast(perm.value==='edit'?'People with the link can now edit':perm.value==='comment'?'People with the link can now comment':'People with the link can now only view'); }));
     const forN=h('input',{class:'field',id:'sh-for',placeholder:'Optional, e.g. Mr Tan',maxlength:'60',value:openShare.forName||'',style:{width:'auto',flex:'1',height:'34px'}});
     const link=h('input',{class:'field',readonly:true,value:shareLink(sh.token,sh.perm!=='view'&&forN.value.trim()),'aria-label':'Share link',style:{fontFamily:'var(--f-mono)',fontSize:'12.5px'}});
     forN.addEventListener('input',()=>{ openShare.forName=forN.value; link.value=shareLink(sh.token,forN.value.trim()); });
     link.addEventListener('focus',()=>link.select());
+    // which pages they can open
+    let picker=null;
+    const showPicker=!isDb&&(t.space||scope.length>1);
+    if(showPicker){
+      const ticked=shareTicked(sh,scope,rootId), allOn=scope.every(x=>ticked.has(x.p.id)||x.p.id===rootId);
+      const setTicked=set=>call(async()=>{ await apply(Object.assign({},sh,{ticked:[...set]})); openShare(arg); });
+      const rows=scope.map(x=>{ const id=x.p.id, onx=ticked.has(id), fixed=id===rootId;
+        return h('label',{class:'shp-row'+(fixed?' fixed':''),style:{paddingLeft:(8+x.d*20)+'px'}},
+          h('input',{type:'checkbox',checked:onx,disabled:fixed,onchange:e=>{ const n=new Set(ticked); e.target.checked?n.add(id):n.delete(id); setTicked(n); }}),
+          x.p.icon?h('span',{class:'shp-ic'},x.p.icon):ic(kindIcon(x.p),15),h('span',{class:'shp-t'},titleOf(x.p)),fixed?h('span',{class:'muted',style:{marginLeft:'auto',fontSize:'12px'}},'this page'):null); });
+      const autoSw=h('button',{class:'tgl sm'+(sh.auto?' on':''),'aria-pressed':String(!!sh.auto),'aria-label':'Share new pages too',onclick:()=>call(async()=>{ await apply(Object.assign({},sh,{auto:!sh.auto,ticked:[...ticked]})); openShare(arg); })});
+      picker=h('div',{class:'shp'},
+        h('div',{class:'shp-head'},h('b',{},'Which pages they can open'),h('button',{class:'cm-link',onclick:()=>setTicked(new Set(allOn?(rootId?[rootId]:[]):scope.map(x=>x.p.id)))},allOn?'Untick all':'Tick all')),
+        scope.length?h('div',{class:'shp-list'},rows):h('p',{class:'muted',style:{margin:'4px 8px'}},'No pages here yet.'),
+        h('div',{class:'row',style:{gap:'10px',padding:'8px 8px 2px',flexWrap:'nowrap'}},autoSw,h('span',{style:{fontSize:'13.5px'}},t.space?'New pages I add to '+name+' are shared too':'New sub-pages I add here are shared too')));
+    }
     body.push(h('div',{class:'share-box'},
       h('div',{class:'row'},h('label',{for:'sh-perm',style:{flex:1}},'Anyone with the link can'),perm),
-      isDb?null:h('label',{class:'row',for:'sh-subs',style:{gap:'8px'}},subs,h('span',{style:{flex:1}},'Include sub-pages',kids.length?h('span',{class:'muted'},' ('+kids.map(k=>titleOf(k)).slice(0,3).join(', ')+(kids.length>3?'…':'')+')'):h('span',{class:'muted'},' (none yet)'))),
+      picker,
       sh.perm!=='view'?h('div',{class:'row',style:{flexWrap:'nowrap'}},h('label',{for:'sh-for',style:{whiteSpace:'nowrap'}},'Link for'),forN):null,
       sh.perm!=='view'?h('p',{class:'muted',style:{margin:'-6px 0 0',fontSize:'12.5px'}},'Type their name and they won’t be asked for it. Leave it empty and they type it once themselves.'):null,
       h('div',{class:'row',style:{flexWrap:'nowrap'}},link,h('button',{class:'btn',onclick:()=>copyText(link.value)},ic('copy',14),'Copy')),
-      h('p',{class:'muted',style:{margin:0}},isDb?(sh.perm!=='view'?'They can copy and change the cards that are here, but can’t add or delete cards, or see your other pages.':'They can see and copy every card, but can’t change anything or see your other pages.'):sh.perm==='edit'?'They can change, add to and comment on this page, but can’t delete pages or see your other pages or your sync key.':sh.perm==='comment'?'They can read this page and leave comments, but can’t change anything or see your other pages.':'They can read this page, but can’t change anything or see your other pages.')),
+      h('p',{class:'muted',style:{margin:0}},isDb?(sh.perm!=='view'?'They can copy and change the cards that are here, but can’t add or delete cards, or see your other pages.':'They can see and copy every card, but can’t change anything or see your other pages.'):(t.space||scope.length>1?'Pages you untick stay private. ':'')+(sh.perm==='edit'?'They can change, add to and comment on these pages, but can’t delete pages or see anything else or your sync key.':sh.perm==='comment'?'They can read and leave comments, but can’t change anything or see anything else.':'They can read, but can’t change anything or see anything else.'))),
       h('p',{class:'muted',style:{margin:0,fontSize:'12.5px'}},'Anyone you give the link to gets this access. If it goes to the wrong person, turn sharing off and on again for a new link.'));
-  } else body.push(h('p',{class:'muted',style:{margin:0}},'Make a link so someone can see this page, or edit it with you. They won’t see anything else in your Bwjspace.'));
+  } else body.push(h('p',{class:'muted',style:{margin:0}},t.space?'Make one link for this whole space. You choose which of its pages they can open. They won’t see your other spaces.':'Make a link so someone can see this page, or edit it with you. They won’t see anything else in your Bwjspace.'));
   body.push(msg);
-  modal('Share “'+titleOf(p)+'”',body);
+  modal('Share “'+name+'”',body);
 }
-
 
 /* ===== comments (comment links, and you replying) ===== */
 const CM={byPage:{},sum:{},panel:false,focus:null,compose:false,showDone:false,drafts:{},later:false};
@@ -1540,6 +1587,19 @@ function sharedWelcome(){
     inp,err,h('button',{class:'btn pri',style:{width:'100%',height:'46px',justifyContent:'center',marginTop:'10px'},onclick:go},'Open the page')));
   setTimeout(()=>inp.focus(),30);
 }
+
+/* the list of shared pages, for someone who opened a link to several pages */
+function sharedOrder(){ const all=Object.values(S.pages).filter(p=>!p.dbId); const ids=new Set(all.map(p=>p.id)); const out=[];
+  const walk=(p,d)=>{ out.push(p.id); all.filter(k=>k.parent===p.id).sort(bySort).forEach(k=>walk(k,d+1)); };
+  all.filter(p=>!p.parent||!ids.has(p.parent)).sort(bySort).forEach(p=>walk(p,0)); return out; }
+function sharedNav(){
+  const all=Object.values(S.pages).filter(p=>!p.dbId); if(!SHARED||(all.length<2&&!SHARED.space)) return null;
+  const ids=new Set(all.map(p=>p.id)), depth=id=>{ let d=0, p=S.pages[id]; while(p&&p.parent&&ids.has(p.parent)&&d<6){ d++; p=S.pages[p.parent]; } return d; };
+  const sp=SHARED.space, root=S.pages[SHARED.root];
+  return h('nav',{class:'sh-nav','aria-label':'Shared pages'},
+    h('div',{class:'sh-nav-h'},sp?h('span',{class:'dot',style:{background:`var(--c-${COLORS.includes(sp.color)?sp.color:'teal'})`}}):null,sp?sp.name:(root?titleOf(root):'Shared pages')),
+    sharedOrder().map(id=>{ const p=S.pages[id]; return h('button',{class:'sh-nav-i'+(R.id===id?' on':''),style:{paddingLeft:(10+depth(id)*14)+'px'},onclick:()=>{ go('page',id); }},p.icon?h('span',{class:'emo'},p.icon):ic(kindIcon(p),15),h('span',{class:'tt'},titleOf(p))); }));
+}
 /* ---- the shared view (opened from someone's link) ---- */
 async function bootShared(token,by){
   SHARED={by:(by||'').slice(0,40),token,perm:'view',root:null,base:{},baseData:{},hash:{},dirty:new Set(),mine:{},timer:null,busy:false,dead:false,tries:0};
@@ -1579,8 +1639,10 @@ async function sharedPull(first){
     } else { if(S.pages[pid]) replaceIn(S.pages[pid],it.data); else S.pages[pid]=it.data; SHARED.hash[pid]=JSON.stringify(S.pages[pid]); }
     SHARED.base[pid]=it.updated; SHARED.baseData[pid]=cl(it.data); changed=true; if(onPage(pid)) cur=true; });
   Object.keys(S.pages).forEach(pid=>{ if(!seen.has(pid)){ delete S.pages[pid]; changed=true; } });
-  if(!S.pages[res.root]){ sharedMessage('This page isn’t available','It may have been moved to the trash.'); return; }
-  if(first||!S.pages[R.id]) R={v:'page',id:res.root};
+  SHARED.space=res.space||null;
+  const firstId=S.pages[res.root]?res.root:sharedOrder()[0];
+  if(!firstId){ sharedMessage('This page isn’t available','It may have been moved to the trash, or nothing is shared yet.'); return; }
+  if(first||!S.pages[R.id]) R={v:'page',id:firstId};
   sharedBar();
   if(SHARED.perm!=='view'){ cmLoad(); if(first&&!cmName()){ sharedWelcome(); return; } }
   else if(Object.keys(CM.byPage).length){ CM.byPage={}; if(CM.panel) cmClose(); }
@@ -1710,7 +1772,7 @@ function renderSidebar(){ if(SHARED) return;
     h('div',{class:'nav'},h('div',{class:'sec-l'},'Spaces'),
       S.spaces.map(sp=>{ const col=!!S.ui.collapsed[sp.id]; const rs=roots(sp.id);
         const hd=h('div',{class:'sp-h',draggable:'true'},
-          h('button',{class:'sp-t','aria-expanded':String(!col),title:'Drag to reorder',onclick:()=>{S.ui.collapsed[sp.id]=!col;save();renderSidebar();}},h('span',{class:'dot',style:{background:`var(--c-${sp.color})`}}),sp.name),
+          h('button',{class:'sp-t','aria-expanded':String(!col),title:'Drag to reorder',onclick:()=>{S.ui.collapsed[sp.id]=!col;save();renderSidebar();}},h('span',{class:'dot',style:{background:`var(--c-${sp.color})`}}),sp.name,sp.share?h('span',{class:'shared-dot',title:'Shared with a link'},ic('users',12)):null),
           h('button',{class:'ta','aria-label':'Options for '+sp.name,title:'Move or edit',onclick:e=>spaceMenu(e.currentTarget,sp)},ic('more',14)),
           h('button',{class:'ta','aria-label':'New page in '+sp.name,title:'New page',onclick:()=>templatePicker(sp.id,null)},ic('plus',14)));
         hd.addEventListener('dragstart',e=>{ dragSpace=sp.id; try{e.dataTransfer.setData('text/plain',sp.id);}catch(_){ } e.dataTransfer.effectAllowed='move'; hd.classList.add('dragging'); });
@@ -1753,7 +1815,9 @@ function spaceMenu(anchor,sp){
     i<n-1?{label:'Move down',icon:'down',fn:()=>moveSpace(sp,i+1)}:null,
     i<n-1?{label:'Move to bottom',icon:'down',fn:()=>moveSpace(sp,n-1)}:null,
     '-',
-    {label:'Rename or change colour',icon:'pen',fn:openSettings}
+    {label:'Rename or change colour',icon:'pen',fn:openSettings},
+    '-',
+    {label:sp.share?'Sharing… ('+(sp.share.perm==='edit'?'can edit':sp.share.perm==='comment'?'can comment':'view only')+')':'Share this space…',icon:'users',fn:()=>openShareSpace(sp)}
   ]);
 }
 function addSpace(){ const used=S.spaces.map(s=>s.color); const sp={id:uid(),name:'New space',color:COLORS.find(c=>!used.includes(c))||'teal'}; S.spaces.push(sp); save(); renderSidebar(); openSettings(); }
@@ -1774,7 +1838,8 @@ function renderView(){
   else if(R.v==='trash'){ node=viewTrash(); title='Trash'; }
   else { node=viewHome(); title='Home'; }
   if(R.v!=='page'){ curPage=null; editorEl=null; }
-  v.replaceChildren(node); $('#tb-title').textContent=title; lockIfViewOnly();
+  const nav=SHARED&&R.v==='page'?sharedNav():null;
+  v.replaceChildren(nav?h('div',{class:'sh-wrap'},nav,h('div',{class:'sh-main'},node)):node); $('#tb-title').textContent=title; lockIfViewOnly();
 }
 
 /* ===== Weekly to-dos ===== */

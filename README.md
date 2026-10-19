@@ -81,6 +81,14 @@ No email, no password: your devices share a private **sync key**.
 - 分享中的页面，在 sidebar 会有一个小小的人像图示
 - 两个人可以同时编辑：改不同段落会自动合并，改到同一段会两个版本都留着让你挑
 
+### 分享整个 space，或一页和它的子页面
+
+- 在 sidebar 的 space 名字旁边按 **⋯ → Share this space…**，就可以用一个连结分享整个 space
+- 在 **Which pages they can open** 勾要给对方看的页面，没勾的页面对方看不到。分享一页时，它的子页面也可以一个一个选
+- **New pages I add … are shared too**：打开的话，你之后新加的页面会自动分享；关掉的话（默认），新页面要你自己去勾
+- 对方打开连结后，左边会有一个小列表，只列出你分享的页面，可以点来换页
+- 要用这个功能，`supabase-setup.sql` 要在 Supabase 再跑一次（2026-10-19 晚上更新）
+
 ### 留言（Comment）
 
 - 对方第一次打开 Comment 连结会先输入名字（只要一次）。点一行字，或旁边的 💬，就可以留言；也可以留言给整页

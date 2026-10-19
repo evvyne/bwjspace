@@ -144,6 +144,9 @@ create table if not exists public.shares (
 create unique index if not exists shares_vault_page on public.shares (vault_id, page_id);
 alter table public.shares enable row level security;
 revoke all on public.shares from anon, authenticated;
+-- which pages inside the shared page / space: only_ids = just these; skip_ids = everything except these
+alter table public.shares add column if not exists only_ids text[];
+alter table public.shares add column if not exists skip_ids text[];
 
 -- which pages a link can reach: the shared page, plus its sub-pages if allowed
 create or replace function public.bwj_share_ids(p_vault uuid, p_root text, p_subs boolean)
@@ -160,6 +163,31 @@ returns setof text language sql stable security definer set search_path = public
   select 'p:' || pid from tree;
 $$;
 
+
+-- which pages a link can open. p_root is a page id, or 'space:<id>' for a whole space.
+-- Cards inside a shared database (like prompts) come with it.
+create or replace function public.bwj_share_allowed(p_vault uuid, p_root text, p_subs boolean, p_only text[], p_skip text[])
+returns setof text language sql stable security definer set search_path = public as $$
+  with recursive tree(pid, db) as (
+    select substring(i.id from 3), coalesce(i.data->>'dbId', '')
+    from public.items i
+    where i.vault_id = p_vault and i.kind = 'page' and not i.deleted
+      and coalesce(i.data->>'kind', '') <> 'journal'
+      and ((p_root like 'space:%' and i.data->>'space' = substring(p_root from 7)
+             and coalesce(i.data->>'parent', '') = '' and coalesce(i.data->>'dbId', '') = '')
+        or (p_root not like 'space:%' and i.id = 'p:' || p_root))
+    union
+    select substring(i.id from 3), coalesce(i.data->>'dbId', '')
+    from public.items i
+    join tree t on (p_subs or p_root like 'space:%' or i.data->>'dbId' = t.pid)
+      and (i.data->>'parent' = t.pid or i.data->>'dbId' = t.pid)
+    where i.vault_id = p_vault and i.kind = 'page' and not i.deleted
+  )
+  select 'p:' || t.pid from tree t
+  where (p_only is null or t.pid = any(p_only) or t.db = any(p_only))
+    and (p_skip is null or not (t.pid = any(p_skip) or t.db = any(p_skip)));
+$$;
+
 -- owner: turn sharing on or change who can do what (needs the sync key)
 create or replace function public.share_set(p_key text, p_page text, p_token text, p_perm text, p_subs boolean)
 returns boolean language plpgsql security definer set search_path = public, extensions as $$
@@ -173,6 +201,17 @@ begin
   values (public.bwj_hash(p_token), v, p_page, p_perm, coalesce(p_subs, true))
   on conflict (token_hash) do update set perm = excluded.perm, include_subs = excluded.include_subs
   where public.shares.vault_id = v;
+  return true;
+end $$;
+
+-- owner: same as above, plus which pages inside (only these / all except these)
+create or replace function public.share_set(p_key text, p_page text, p_token text, p_perm text, p_subs boolean, p_only text[], p_skip text[])
+returns boolean language plpgsql security definer set search_path = public, extensions as $$
+declare v uuid := public.bwj_vault(p_key);
+begin
+  perform public.share_set(p_key, p_page, p_token, p_perm, p_subs);
+  update public.shares set only_ids = p_only, skip_ids = p_skip
+  where token_hash = public.bwj_hash(p_token) and vault_id = v;
   return true;
 end $$;
 
@@ -197,10 +236,13 @@ begin
   into res
   from public.items i
   where i.vault_id = s.vault_id
-    and i.id in (select public.bwj_share_ids(s.vault_id, s.page_id, s.include_subs))
+    and i.id in (select public.bwj_share_allowed(s.vault_id, s.page_id, s.include_subs, s.only_ids, s.skip_ids))
     and not i.deleted
     and coalesce(i.data->>'trashed', 'false') <> 'true';
-  return jsonb_build_object('perm', s.perm, 'root', s.page_id, 'items', res);
+  return jsonb_build_object('perm', s.perm, 'root', s.page_id, 'items', res,
+    'space', case when s.page_id like 'space:%' then (
+      select e from public.items sp, jsonb_array_elements(case when jsonb_typeof(sp.data) = 'array' then sp.data else '[]'::jsonb end) e
+      where sp.vault_id = s.vault_id and sp.id = 'spaces' and e->>'id' = substring(s.page_id from 7) limit 1) end);
 end $$;
 
 -- people with an "edit" link: change the shared page(s).
@@ -218,7 +260,7 @@ begin
   select * into s from public.shares where token_hash = public.bwj_hash(p_token);
   if not found then raise exception 'link off'; end if;
   if s.perm <> 'edit' then raise exception 'view only'; end if;
-  allowed := array(select public.bwj_share_ids(s.vault_id, s.page_id, s.include_subs));
+  allowed := array(select public.bwj_share_allowed(s.vault_id, s.page_id, s.include_subs, s.only_ids, s.skip_ids));
   for r in select * from jsonb_array_elements(p_rows) loop
     select * into old from public.items where vault_id = s.vault_id and id = r->>'id';
     if not found or not ((r->>'id') = any(allowed)) or old.deleted
@@ -240,7 +282,9 @@ begin
   return refused;
 end $$;
 
-revoke all on function public.bwj_hash(text), public.bwj_share_ids(uuid, text, boolean) from public, anon, authenticated;
+revoke all on function public.bwj_hash(text), public.bwj_share_ids(uuid, text, boolean), public.bwj_share_allowed(uuid, text, boolean, text[], text[]) from public, anon, authenticated;
+revoke all on function public.share_set(text, text, text, text, boolean, text[], text[]) from public;
+grant execute on function public.share_set(text, text, text, text, boolean, text[], text[]) to anon, authenticated;
 revoke all on function public.share_set(text, text, text, text, boolean), public.share_stop(text, text),
   public.shared_pull(text), public.shared_push(text, jsonb) from public;
 grant execute on function public.share_set(text, text, text, text, boolean), public.share_stop(text, text),
@@ -333,7 +377,7 @@ begin
   into res
   from public.comments c
   where c.vault_id = s.vault_id
-    and ('p:' || c.page_id) in (select public.bwj_share_ids(s.vault_id, s.page_id, s.include_subs));
+    and ('p:' || c.page_id) in (select public.bwj_share_allowed(s.vault_id, s.page_id, s.include_subs, s.only_ids, s.skip_ids));
   return res;
 end $$;
 
@@ -345,7 +389,7 @@ begin
   select * into s from public.shares where token_hash = public.bwj_hash(p_token);
   if not found then raise exception 'link off'; end if;
   if s.perm not in ('comment', 'edit') then raise exception 'view only'; end if;
-  if not (('p:' || p_page) in (select public.bwj_share_ids(s.vault_id, s.page_id, s.include_subs))) then raise exception 'not shared'; end if;
+  if not (('p:' || p_page) in (select public.bwj_share_allowed(s.vault_id, s.page_id, s.include_subs, s.only_ids, s.skip_ids))) then raise exception 'not shared'; end if;
   if length(coalesce(p_body, '')) = 0 or length(p_body) > 4000 or length(coalesce(p_id, '')) < 8 then raise exception 'bad comment'; end if;
   insert into public.comments (id, vault_id, page_id, block_id, quote, author, body, by_owner)
   values (p_id, s.vault_id, p_page, nullif(p_block, ''), left(p_quote, 120), left(coalesce(nullif(trim(p_author), ''), 'Guest'), 60), p_body, false)
