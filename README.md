@@ -127,6 +127,7 @@ No email, no password: your devices share a private **sync key**.
 ### Sidebar
 
 - 鼠标移到页面上会出现 **⋯**（手机一直显示，电脑也可以按右键）：Rename、Duplicate、Delete
+- 手机上：长按页面名字大约半秒，等它浮起来再拖。放在两页中间就排在那里，放在某一页上面就变成它的 sub-page，放在 space 名字上就搬去那个 space
 - Delete 要按两次才会删，删了会放进 Trash，下面有 **Undo** 可以马上救回来。有 sub-page 的话会一起放进 Trash
 
 ### 照片
