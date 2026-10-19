@@ -67,7 +67,8 @@ No email, no password: your devices share a private **sync key**.
 
 1. 打开要分享的那一页，按右上角 **Share**
 2. 打开 **Share with a link**
-3. **Anyone with the link can**：选 **View**（只能看）或 **Edit**（可以改、可以加内容）
+3. **Anyone with the link can**：选 **View**（只能看）、**Comment**（可以看和留言）或 **Edit**（可以改、加内容和留言）
+   - 选 Comment 或 Edit 时，可以在 **Link for** 写对方名字（例如 Mr Tan），对方打开就不用再输入名字
 4. 要不要连底下的子页面一起分享：勾或不勾 **Include sub-pages**
 5. 按 **Copy**，把连结传给对方
 
@@ -79,6 +80,13 @@ No email, no password: your devices share a private **sync key**.
 - 关掉 **Share with a link**，连结马上失效。再打开会是一个新的连结
 - 分享中的页面，在 sidebar 会有一个小小的人像图示
 - 两个人可以同时编辑：改不同段落会自动合并，改到同一段会两个版本都留着让你挑
+
+### 留言（Comment）
+
+- 对方第一次打开 Comment 连结会先输入名字（只要一次）。点一行字，或旁边的 💬，就可以留言；也可以留言给整页
+- 你那边：有留言的那一行会有黄色底线和数字，sidebar 的页面旁边会有黄色数字。按页面上方的 **Comments** 打开留言栏，可以回复、**Resolve**（完成）或删除
+- 留言是另外存的，不会影响页面内容和同步
+- 要用留言功能，`supabase-setup.sql` 要在 Supabase 再跑一次（2026-10-19 更新）
 
 ---
 

@@ -137,7 +137,7 @@ create table if not exists public.shares (
   token_hash   text primary key,
   vault_id     uuid not null references public.vaults(id) on delete cascade,
   page_id      text not null,
-  perm         text not null check (perm in ('view', 'edit')),
+  perm         text not null,
   include_subs boolean not null default true,
   created_at   timestamptz not null default now()
 );
@@ -166,7 +166,7 @@ returns boolean language plpgsql security definer set search_path = public, exte
 declare v uuid := public.bwj_vault(p_key);
 begin
   if v is null then raise exception 'bad key'; end if;
-  if p_perm not in ('view', 'edit') then raise exception 'bad permission'; end if;
+  if p_perm not in ('view', 'comment', 'edit') then raise exception 'bad permission'; end if;
   if p_token is null or length(p_token) < 24 then raise exception 'link too short'; end if;
   delete from public.shares where vault_id = v and page_id = p_page and token_hash <> public.bwj_hash(p_token);
   insert into public.shares (token_hash, vault_id, page_id, perm, include_subs)
@@ -245,3 +245,119 @@ revoke all on function public.share_set(text, text, text, text, boolean), public
   public.shared_pull(text), public.shared_push(text, jsonb) from public;
 grant execute on function public.share_set(text, text, text, text, boolean), public.share_stop(text, text),
   public.shared_pull(text), public.shared_push(text, jsonb) to anon, authenticated;
+
+-- ============================================================
+-- Comment links and comments (added later; safe to run again)
+-- ============================================================
+alter table public.shares drop constraint if exists shares_perm_check;
+alter table public.shares add constraint shares_perm_check check (perm in ('view', 'comment', 'edit'));
+
+create table if not exists public.comments (
+  id         text primary key,
+  vault_id   uuid not null references public.vaults(id) on delete cascade,
+  page_id    text not null,
+  block_id   text,                      -- the line it is about (empty = the whole page)
+  quote      text,                      -- a few words of that line, in case it is deleted later
+  author     text not null,
+  body       text not null,
+  by_owner   boolean not null default false,
+  resolved   boolean not null default false,
+  created    timestamptz not null default now()
+);
+create index if not exists comments_vault_page on public.comments (vault_id, page_id);
+alter table public.comments enable row level security;
+revoke all on public.comments from anon, authenticated;
+
+-- you (needs the sync key): read the comments of one page
+create or replace function public.comments_owner(p_key text, p_page text)
+returns setof public.comments language plpgsql stable security definer set search_path = public, extensions as $$
+declare v uuid := public.bwj_vault(p_key);
+begin
+  if v is null then raise exception 'bad key'; end if;
+  return query select * from public.comments c where c.vault_id = v and c.page_id = p_page order by c.created;
+end $$;
+
+-- you: how many open comments each page has (for the sidebar)
+create or replace function public.comments_summary(p_key text)
+returns table(page_id text, open_count integer) language plpgsql stable security definer set search_path = public, extensions as $$
+declare v uuid := public.bwj_vault(p_key);
+begin
+  if v is null then raise exception 'bad key'; end if;
+  return query select c.page_id, count(*)::integer from public.comments c where c.vault_id = v and not c.resolved group by c.page_id;
+end $$;
+
+-- you: add a comment or reply
+create or replace function public.comment_add_owner(p_key text, p_id text, p_page text, p_block text, p_quote text, p_author text, p_body text)
+returns boolean language plpgsql security definer set search_path = public, extensions as $$
+declare v uuid := public.bwj_vault(p_key);
+begin
+  if v is null then raise exception 'bad key'; end if;
+  if length(coalesce(p_body, '')) = 0 or length(p_body) > 4000 then raise exception 'bad comment'; end if;
+  insert into public.comments (id, vault_id, page_id, block_id, quote, author, body, by_owner)
+  values (p_id, v, p_page, nullif(p_block, ''), left(p_quote, 120), left(coalesce(nullif(p_author, ''), 'Owner'), 60), p_body, true)
+  on conflict (id) do nothing;
+  return true;
+end $$;
+
+-- you: mark the comments on one line (or the whole page) as done
+create or replace function public.comment_resolve(p_key text, p_page text, p_block text)
+returns boolean language plpgsql security definer set search_path = public, extensions as $$
+declare v uuid := public.bwj_vault(p_key);
+begin
+  if v is null then raise exception 'bad key'; end if;
+  update public.comments set resolved = true
+  where vault_id = v and page_id = p_page and block_id is not distinct from nullif(p_block, '') and not resolved;
+  return true;
+end $$;
+
+-- you: delete one comment
+create or replace function public.comment_delete(p_key text, p_id text)
+returns boolean language plpgsql security definer set search_path = public, extensions as $$
+declare v uuid := public.bwj_vault(p_key);
+begin
+  if v is null then raise exception 'bad key'; end if;
+  delete from public.comments where vault_id = v and id = p_id;
+  return true;
+end $$;
+
+-- people with a comment or edit link: read the comments on the shared page(s)
+create or replace function public.shared_comments(p_token text)
+returns jsonb language plpgsql stable security definer set search_path = public, extensions as $$
+declare s public.shares; res jsonb;
+begin
+  select * into s from public.shares where token_hash = public.bwj_hash(p_token);
+  if not found then raise exception 'link off'; end if;
+  if s.perm = 'view' then return '[]'::jsonb; end if;
+  select coalesce(jsonb_agg(jsonb_build_object('id', c.id, 'page_id', c.page_id, 'block_id', c.block_id, 'quote', c.quote,
+           'author', c.author, 'body', c.body, 'by_owner', c.by_owner, 'resolved', c.resolved, 'created', c.created) order by c.created), '[]'::jsonb)
+  into res
+  from public.comments c
+  where c.vault_id = s.vault_id
+    and ('p:' || c.page_id) in (select public.bwj_share_ids(s.vault_id, s.page_id, s.include_subs));
+  return res;
+end $$;
+
+-- people with a comment or edit link: add a comment or reply
+create or replace function public.shared_comment_add(p_token text, p_id text, p_page text, p_block text, p_quote text, p_author text, p_body text)
+returns boolean language plpgsql security definer set search_path = public, extensions as $$
+declare s public.shares;
+begin
+  select * into s from public.shares where token_hash = public.bwj_hash(p_token);
+  if not found then raise exception 'link off'; end if;
+  if s.perm not in ('comment', 'edit') then raise exception 'view only'; end if;
+  if not (('p:' || p_page) in (select public.bwj_share_ids(s.vault_id, s.page_id, s.include_subs))) then raise exception 'not shared'; end if;
+  if length(coalesce(p_body, '')) = 0 or length(p_body) > 4000 or length(coalesce(p_id, '')) < 8 then raise exception 'bad comment'; end if;
+  insert into public.comments (id, vault_id, page_id, block_id, quote, author, body, by_owner)
+  values (p_id, s.vault_id, p_page, nullif(p_block, ''), left(p_quote, 120), left(coalesce(nullif(trim(p_author), ''), 'Guest'), 60), p_body, false)
+  on conflict (id) do nothing;
+  return true;
+end $$;
+
+revoke all on function public.comments_owner(text, text), public.comments_summary(text),
+  public.comment_add_owner(text, text, text, text, text, text, text), public.comment_resolve(text, text, text),
+  public.comment_delete(text, text), public.shared_comments(text),
+  public.shared_comment_add(text, text, text, text, text, text, text) from public;
+grant execute on function public.comments_owner(text, text), public.comments_summary(text),
+  public.comment_add_owner(text, text, text, text, text, text, text), public.comment_resolve(text, text, text),
+  public.comment_delete(text, text), public.shared_comments(text),
+  public.shared_comment_add(text, text, text, text, text, text, text) to anon, authenticated;
