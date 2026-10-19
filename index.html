@@ -1265,7 +1265,7 @@ const fmtLong=s=>parseYmd(s).toLocaleDateString('en-GB',{weekday:'long',day:'num
 const fmtShort=s=>parseYmd(s).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
 const fmtMonth=s=>parseYmd(s).toLocaleDateString('en-GB',{month:'long',year:'numeric'});
 function ago(t){const s=(Date.now()-t)/1000; if(s<60)return 'just now'; if(s<3600)return Math.floor(s/60)+' min ago'; if(s<86400)return Math.floor(s/3600)+' h ago'; const d=Math.floor(s/86400); return d===1?'yesterday':d+' days ago';}
-const APP_VER='2026.10.20-9';
+const APP_VER='2026.10.20-10';
 /* tell you when a newer version is on GitHub, so every device runs the same version */
 async function checkUpdate(){ if(location.protocol!=='https:') return; try{ const t=await (await fetch('index.html',{cache:'no-store'})).text(); const m=t.match(/APP_VER='([^']+)'/); if(m&&m[1]!==APP_VER&&!checkUpdate.shown){ checkUpdate.shown=true; toast('A new version of Bwjspace is ready.',{label:'Reload',stay:true,fn:()=>location.reload()}); } }catch(e){} }
 setTimeout(checkUpdate,4000); setInterval(()=>{ if(!document.hidden) checkUpdate(); },10*60000); document.addEventListener('visibilitychange',()=>{ if(!document.hidden) checkUpdate(); });
@@ -2559,9 +2559,11 @@ function viewHome(){
   const refresh=keepScroll(renderView);
   const from=homeRange?homeRange.from:ws, to=homeRange?homeRange.to:addDays(ws,exp?13:6);
   ensureRecurring(to);
-  const week=start=>weekList(start,refresh);
-  const shownTo=homeRange?to:addDays(ws,6);
-  const inR=tasks().filter(k=>k.date&&k.date>=from&&k.date<=shownTo);
+  // days that are over are hidden on Home (unfinished to-dos already move to today); a small button shows them again
+  const showPast=!!S.ui.showPast, hidePastFrom=homeRange||showPast?null:t;
+  const week=start=>weekList(start,refresh,hidePastFrom);
+  const shownTo=homeRange?to:addDays(ws,6), shownFrom=hidePastFrom&&hidePastFrom>from?hidePastFrom:from;
+  const inR=tasks().filter(k=>k.date&&k.date>=shownFrom&&k.date<=shownTo);
   const done=inR.filter(k=>k.done).length;
   const dow=monIdx(t);
   const pickBtn=h('button',{class:'btn sm','aria-label':'Pick a date range',onclick:e=>rangePicker(e.currentTarget,refresh)},ic('calendar',14),homeRange?'Change dates':'Pick dates');
@@ -2570,7 +2572,8 @@ function viewHome(){
     h('h1',{class:'hello'},`${greet}, ${S.settings.name||'there'}`),
     dow>=5&&!homeRange?h('div',{class:'nudge'},ic('check',16),h('span',{},dow===6?"It's Sunday. A good time to look back at this week and plan the next one.":"The weekend is a good time to look back at this week."),h('button',{class:'btn sm pri',onclick:()=>go('review')},'Weekly review')):null,
     h('div',{class:'wk-h'},
-      h('h2',{},homeRange?'Your dates':'This week'),h('span',{class:'wk-r'},fmtRange(from,shownTo)),
+      h('h2',{},homeRange?'Your dates':'This week'),h('span',{class:'wk-r'},fmtRange(shownFrom,shownTo)),
+      !homeRange&&dow>0?h('button',{class:'pp-edit wk-past',onclick:()=>{ S.ui.showPast=!showPast; save(); refresh(); }},showPast?'Hide past days':'Show past days'):null,
       inR.length?h('span',{class:'wk-p'},`${done} of ${inR.length} done`):null,
       h('span',{style:{flex:1}}),
       h('div',{class:'wk-act'},
