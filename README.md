@@ -102,6 +102,19 @@ No email, no password: your devices share a private **sync key**.
 - 点一张卡片：电脑会在右边打开侧栏，手机会弹出一张卡片。阶段和平台直接点按钮选，日期直接打字，下面写 caption
 - 点 **Edit stages / Edit platforms** 可以加、改名、换颜色、拖 ⋮⋮ 换顺序、删掉。删掉还有 post 的阶段时，会先问要把 post 搬去哪里
 - 平台也可以在卡片里按 **+ Add** 直接加
+- 在 **Calendar** 点 post 也会打开侧栏（手机是弹出卡片）
+
+### Database 表格
+
+- 表格里的选项格（例如 Category）点一下会弹出一排按钮，点一个就选好
+- 表格每行最右边的 ↗ 会打开侧栏（手机是弹出卡片），可以直接改每一栏
+- **Properties** 里的选项会显示成彩色小标签，按 **Edit options →** 可以加、改名、换颜色、拖顺序、删掉
+- 栏位类型（Text / Select / Date…）改成一格一格的选
+
+### Sidebar
+
+- 鼠标移到页面上会出现 **⋯**（手机一直显示，电脑也可以按右键）：Rename、Duplicate、Delete
+- Delete 要按两次才会删，删了会放进 Trash，下面有 **Undo** 可以马上救回来。有 sub-page 的话会一起放进 Trash
 
 ### 照片
 
