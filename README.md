@@ -87,7 +87,23 @@ No email, no password: your devices share a private **sync key**.
 - 在 **Which pages they can open** 勾要给对方看的页面，没勾的页面对方看不到。分享一页时，它的子页面也可以一个一个选
 - **New pages I add … are shared too**：打开的话，你之后新加的页面会自动分享；关掉的话（默认），新页面要你自己去勾
 - 对方打开连结后，左边会有一个小列表，只列出你分享的页面，可以点来换页
-- 要用这个功能，`supabase-setup.sql` 要在 Supabase 再跑一次（2026-10-19 晚上更新）
+- 要用这个功能，`supabase-setup.sql` 要在 Supabase 再跑一次
+
+### 页面历史记录
+
+- 页面右上角 **⋯ → Page history**：看到这一页最近 10 天的版本，谁改的、改了什么
+- 点一个旧版本可以看那时候的样子（绿色 = 会回来，红色划掉 = 会拿掉），按 **Restore this version** 还原，下面有 **Undo**
+- 同一个人 10 分钟内的修改会合成一个版本
+
+### 内容排程板
+
+- 新增页面时选 **Content board**：Idea → Filming → Editing → Posted，可以拖卡片或按卡片下面的按钮换阶段
+- 上面可以选平台，也可以换成 **Calendar** 看
+
+### 照片
+
+- 新加的照片会自动搬到 Supabase Storage（你的私人资料夹），页面会比较轻、同步比较快。以前的照片也会慢慢自动搬过去
+- 没网路时照片先存在页面里，有网路后才搬
 
 ### 留言（Comment）
 

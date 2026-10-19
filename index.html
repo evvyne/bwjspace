@@ -179,6 +179,50 @@ textarea.field{height:auto;padding:10px 12px;resize:vertical}
 body.cm-on .cmb{right:-6px;top:-10px;width:auto}
 @media (max-width:760px){ .cm-panel{top:auto;left:0;width:auto;max-height:78vh;border-left:0;border-top:1px solid var(--line);border-radius:18px 18px 0 0} }
 @media (hover:none){ .cm-add{display:none} .cm-del{opacity:.7} }
+.cb-head{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:14px}
+.cb-plats{display:flex;flex-wrap:wrap;gap:6px}
+.cb-plats .pm-chip{height:30px;padding:0 12px;font-size:13px}
+.cb-board .bcol h3{display:flex;align-items:center;gap:8px}
+.cb-dot{width:9px;height:9px;border-radius:50%;flex:none}
+.cb-name{font-weight:700;font-size:14px;color:var(--ink)}
+.cb-card{display:flex;flex-direction:column;gap:8px}
+.cb-date{font-size:12px;color:var(--ink-2)}
+.cb-mvs{display:flex;justify-content:space-between;gap:6px}
+.cb-mv{height:26px;padding:0 9px;border-radius:7px;background:var(--surface-2);color:var(--ink-2);font-size:12px;font-weight:500}
+.cb-mv:hover{color:var(--ink);background:var(--hover)}
+#bnav{display:none}
+@media (max-width:860px){
+  #bnav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));flex:none;border-top:1px solid var(--line);background:var(--side);padding:4px max(6px,env(safe-area-inset-left,0px)) max(6px,env(safe-area-inset-bottom,0px))}
+  #bnav button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:52px;color:var(--ink-3);font-size:11.5px;font-weight:600}
+  #bnav button.on{color:var(--accent)}
+  .sb-foot{padding-bottom:10px}
+}
+.shared-mode #bnav{display:none!important}
+.cm-list p{white-space:normal}
+.hist-v{display:flex;align-items:flex-start;gap:10px;padding:10px;border-radius:10px;border:1px solid transparent;text-align:left;width:100%}
+.hist-v:hover{background:var(--hover)}
+.hist-v.on{background:var(--surface);border-color:var(--accent)}
+.hist-dot{width:10px;height:10px;border-radius:50%;margin-top:5px;flex:none}
+.hist-tx{display:flex;flex-direction:column;gap:2px;min-width:0}
+.hist-tx b{font-size:14px;font-weight:600}
+.hist-tx span{font-size:12.5px;color:var(--ink-2)}
+.hist-tx small{font-size:12px;color:var(--ink-3)}
+.hist-foot{display:flex;flex-direction:column;gap:8px;padding:12px 14px max(14px,env(safe-area-inset-bottom,0px));border-top:1px solid var(--line)}
+.hist-foot .btn{justify-content:center;height:42px}
+.hp-chip{display:inline-flex;align-items:center;height:30px;padding:0 12px;border-radius:8px;background:var(--s-amber);color:var(--c-amber);font-size:13px;font-weight:600;margin:4px 0 10px}
+.hist-prev{display:flex;flex-direction:column;gap:2px}
+.hp-legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12.5px;color:var(--ink-2);margin-bottom:10px}
+.hp-legend span{display:flex;align-items:center;gap:6px}
+.hp-sw{width:12px;height:12px;border-radius:3px;display:inline-block}
+.hp-sw.back,.hp-back{background:color-mix(in srgb,var(--c-green) 22%,transparent)}
+.hp-sw.chg,.hp-chg{background:color-mix(in srgb,var(--c-amber) 20%,transparent)}
+.hp-sw.gone,.hp-gone{background:color-mix(in srgb,var(--c-red) 20%,transparent)}
+.hp-gone{text-decoration:line-through;color:var(--ink-2)}
+.hp-l{padding:3px 8px;border-radius:6px;font-size:15.5px;line-height:1.6;white-space:pre-wrap;word-break:break-word}
+.hp-h1{font-family:var(--f-display);font-size:28px;font-weight:600;padding-top:10px}
+.hp-h2{font-family:var(--f-display);font-size:22px;font-weight:600;padding-top:8px}
+.hp-h3{font-family:var(--f-display);font-size:18px;font-weight:600;padding-top:6px}
+.hp-title{font-weight:600}
 .blk.bsel{background:color-mix(in srgb,var(--accent) 15%,transparent)}
 .blk.bsel+.blk.bsel{border-top-left-radius:0;border-top-right-radius:0}
 body.bs-on .blocks{user-select:none;-webkit-user-select:none}
@@ -886,6 +930,7 @@ select.cell{appearance:auto;cursor:pointer}
       <button class="icon-btn" id="tb-search" aria-label="Search"></button>
     </div>
     <div id="view"></div>
+    <nav id="bnav" aria-label="Main"></nav>
   </main>
 </div>
 <div id="toast" role="status" aria-live="polite"></div>
@@ -983,7 +1028,7 @@ const fmtLong=s=>parseYmd(s).toLocaleDateString('en-GB',{weekday:'long',day:'num
 const fmtShort=s=>parseYmd(s).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
 const fmtMonth=s=>parseYmd(s).toLocaleDateString('en-GB',{month:'long',year:'numeric'});
 function ago(t){const s=(Date.now()-t)/1000; if(s<60)return 'just now'; if(s<3600)return Math.floor(s/60)+' min ago'; if(s<86400)return Math.floor(s/3600)+' h ago'; const d=Math.floor(s/86400); return d===1?'yesterday':d+' days ago';}
-const APP_VER='2026.10.19-17';
+const APP_VER='2026.10.19-19';
 /* tell you when a newer version is on GitHub, so every device runs the same version */
 async function checkUpdate(){ if(location.protocol!=='https:') return; try{ const t=await (await fetch('index.html',{cache:'no-store'})).text(); const m=t.match(/APP_VER='([^']+)'/); if(m&&m[1]!==APP_VER&&!checkUpdate.shown){ checkUpdate.shown=true; toast('A new version of Bwjspace is ready.',{label:'Reload',stay:true,fn:()=>location.reload()}); } }catch(e){} }
 setTimeout(checkUpdate,4000); setInterval(()=>{ if(!document.hidden) checkUpdate(); },10*60000); document.addEventListener('visibilitychange',()=>{ if(!document.hidden) checkUpdate(); });
@@ -1005,7 +1050,7 @@ function newPage(o){const p=Object.assign({id:uid(),title:'',icon:'',cover:null,
 
 const DBT={
   blank:{title:'Untitled database',icon:'',view:'table',cols:[{name:'Tags',type:'tags'},{name:'Date',type:'date'}]},
-  content:{title:'Content calendar',icon:'🎬',view:'board',cols:[{name:'Status',type:'select',options:['Idea','Scripting','Shooting','Editing','Posted']},{name:'Platform',type:'select',options:['YouTube','TikTok','Instagram','Douyin']},{name:'Post date',type:'date'}]},
+  content:{title:'Content board',icon:'🎬',view:'content',cols:[{name:'Status',type:'select',options:['Idea','Filming','Editing','Posted'],colors:{Idea:'slate',Filming:'amber',Editing:'blue',Posted:'teal'}},{name:'Platform',type:'select',options:['Instagram','TikTok','YouTube'],colors:{Instagram:'pink',TikTok:'charcoal',YouTube:'coral'}},{name:'Post date',type:'date'}]},
   prompts:{title:'Prompt library',icon:'✨',view:'gallery',cols:[{name:'Category',type:'select',options:['Colour grade','Subtitles','Cutout','Script','Other']},{name:'Tool',type:'text'},{name:'Prompt',type:'text'},{name:'Result link',type:'url'}]},
   bookings:{title:'Studio bookings',icon:'📅',view:'calendar',cols:[{name:'Date',type:'date'},{name:'Status',type:'select',options:['Enquiry','Confirmed','Done']},{name:'Client',type:'text'},{name:'Notes',type:'text'}]},
   gear:{title:'Equipment list',icon:'🎥',view:'table',cols:[{name:'Category',type:'select',options:['Camera','Lens','Light','Audio','Grip']},{name:'Borrowed by',type:'text'},{name:'Return date',type:'date'},{name:'Available',type:'checkbox'}]}
@@ -1291,11 +1336,11 @@ async function syncNow(manual){
         if(id.startsWith('p:')){ const rw=batchRows[i]; if(rw.deleted) delete SYBASE[id.slice(2)]; else SYBASE[id.slice(2)]=rw.data; if(M[id]&&M[id].u!==u) M[id].b=u; baseSave(); } });
       batch=[]; size=0; };
     for(const id of dirty){ const m=M[id]; const r=recs.get(id);
-      const row=m.x||!r?{id,kind:kindOfId(id),data:null,updated:m.u,base:m.b||0,deleted:true}:{id,kind:r.kind,data:r.kind==='page'?cl(r.obj):r.obj,updated:m.u,base:m.b||0,deleted:false};
+      const row=m.x||!r?{id,kind:kindOfId(id),data:null,updated:m.u,base:m.b||0,deleted:true}:{id,kind:r.kind,data:r.kind==='page'?cl(r.obj):r.obj,updated:m.u,base:m.b||0,deleted:false,author:(S.settings.name||'You').slice(0,40)};
       const len=JSON.stringify(row).length; if(batch.length&&(size+len>1500000||batch.length>=40)) await sendBatch(); batch.push(row); size+=len; }
     await sendBatch();
     SY.meta.ever=true; await metaSave();
-    SY.last=Date.now(); setStatus('ok'); cmSummary();
+    SY.last=Date.now(); setStatus('ok'); cmSummary(); setTimeout(uploadInlineImages,500);
     if(SY.dups){ toast(SY.dups===1?'You and someone else changed the same paragraph at the same time. Both versions are on the page, marked in yellow. Keep one.':SY.dups+' paragraphs were changed in two places at once. Both versions are on the page, marked in yellow.'); SY.dups=0; }
     if(SY.conflicts){ toast(SY.conflicts===1?'A page was changed on two devices. Both versions are kept: look for “(conflict copy)”.':SY.conflicts+' pages were changed on two devices. Both versions of each are kept.'); SY.conflicts=0; }
     if(manual) toast('Synced');
@@ -1600,6 +1645,89 @@ function sharedNav(){
     h('div',{class:'sh-nav-h'},sp?h('span',{class:'dot',style:{background:`var(--c-${COLORS.includes(sp.color)?sp.color:'teal'})`}}):null,sp?sp.name:(root?titleOf(root):'Shared pages')),
     sharedOrder().map(id=>{ const p=S.pages[id]; return h('button',{class:'sh-nav-i'+(R.id===id?' on':''),style:{paddingLeft:(10+depth(id)*14)+'px'},onclick:()=>{ go('page',id); }},p.icon?h('span',{class:'emo'},p.icon):ic(kindIcon(p),15),h('span',{class:'tt'},titleOf(p))); }));
 }
+
+/* ===== photos: kept in your Supabase Storage instead of inside the page ===== */
+const IMG={busy:false,folder:null,bucket:'bwj-images'};
+function dataUrlToBlob(u){ const m=u.match(/^data:([^;,]+)(;base64)?,(.*)$/); if(!m) return null; const bin=m[2]?atob(m[3]):decodeURIComponent(m[3]); const a=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) a[i]=bin.charCodeAt(i); return new Blob([a],{type:m[1]}); }
+async function uploadInlineImages(){
+  if(IMG.busy||SHARED||!SY.client||!SY.key||!navigator.onLine||!SY.client.storage) return; IMG.busy=true;
+  try{
+    if(!IMG.folder) IMG.folder=await rpc('img_folder',{p_key:SY.key});
+    let n=0;
+    for(const p of Object.values(S.pages)){ for(const b of (p.blocks||[])){
+      if(n>=6) break;
+      if(b.type!=='image'||!b.data||typeof b.data.src!=='string'||!b.data.src.startsWith('data:')) continue;
+      const src=b.data.src, blob=dataUrlToBlob(src); if(!blob) continue;
+      const ext=blob.type==='image/png'?'png':blob.type==='image/webp'?'webp':blob.type==='image/gif'?'gif':'jpg';
+      const path=IMG.folder+'/'+uid()+uid()+'.'+ext;
+      const {error}=await SY.client.storage.from(IMG.bucket).upload(path,blob,{contentType:blob.type,cacheControl:'31536000',upsert:false});
+      if(error){ IMG.failed=(error.message||'')+''; break; }
+      const url=SY.client.storage.from(IMG.bucket).getPublicUrl(path).data.publicUrl;
+      if(b.data.src===src){ b.data.src=url; touch(p); n++; }
+    } }
+    if(n) scheduleSync(1500);
+  }catch(e){ IMG.failed=(e&&e.message)||String(e); }
+  finally{ IMG.busy=false; }
+}
+
+/* ===== page history: the last 10 days of each page ===== */
+const HIST={p:null,list:[],sel:null,loading:false};
+function histWhen(t){ const d=new Date(t), now=new Date(); const day=x=>x.toDateString(); const tm=d.toLocaleTimeString('en-GB',{hour:'numeric',minute:'2-digit',hour12:true}).replace(' ',' ');
+  if(day(d)===day(now)) return 'Today, '+tm; const y=new Date(now); y.setDate(now.getDate()-1); if(day(d)===day(y)) return 'Yesterday, '+tm;
+  return d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'})+', '+tm; }
+function blockSig(b){ const c=cl(b); delete c.conflict; return stable(c); }
+function histSummary(newer,older){
+  if(!older) return 'Earliest copy kept';
+  const A=new Map((older.blocks||[]).map(b=>[b.id,b])), B=new Map((newer.blocks||[]).map(b=>[b.id,b]));
+  let add=0,del=0,chg=0; B.forEach((b,id)=>{ if(!A.has(id)) add++; else if(blockSig(A.get(id))!==blockSig(b)) chg++; }); A.forEach((b,id)=>{ if(!B.has(id)) del++; });
+  const parts=[]; if((newer.title||'')!==(older.title||'')) parts.push('Renamed'); if(add) parts.push('added '+add+(add===1?' line':' lines')); if(chg) parts.push('changed '+chg); if(del) parts.push('deleted '+del);
+  const t=parts.join(', '); return t?t.charAt(0).toUpperCase()+t.slice(1):'Small changes'; }
+async function openHistory(p){
+  HIST.p=p; HIST.sel=null; HIST.list=[]; HIST.loading=true; HIST.err=''; renderHistory();
+  try{ HIST.list=(await rpc('page_history',{p_key:SY.key,p_page:p.id}))||[]; }
+  catch(e){ HIST.err=/page_history|function/i.test((e&&e.message)||'')?'Page history needs the latest supabase-setup.sql. Run it once in Supabase.':'Couldn’t load the history. Check your internet.'; }
+  HIST.loading=false; renderHistory();
+}
+function closeHistory(){ const el=$('#hist-panel'); if(el) el.remove(); document.body.classList.remove('cm-on'); const had=HIST.sel!=null; HIST.p=null; HIST.sel=null; if(had) renderView(); }
+function renderHistory(){
+  const p=HIST.p; let el=$('#hist-panel'); if(!p){ if(el) el.remove(); return; }
+  if(CM.panel) cmClose();
+  const items=HIST.list.map((v,i)=>{ const on=HIST.sel===i, older=HIST.list[i+1];
+    return h('button',{class:'hist-v'+(on?' on':''),'aria-pressed':String(on),onclick:()=>{ HIST.sel=on?null:i; renderHistory(); renderView(); }},
+      h('span',{class:'hist-dot',style:{background:/\(link\)$/.test(v.author)?'var(--c-coral)':'var(--accent)'}}),
+      h('span',{class:'hist-tx'},h('b',{},i===0?'Latest · '+histWhen(v.updated):histWhen(v.updated)),h('span',{},v.author||'Before history started'),h('small',{},histSummary(v.data||{},older&&older.data))));
+  });
+  const sel=HIST.sel!=null&&HIST.list[HIST.sel];
+  const body=h('div',{class:'cm-list'},
+    HIST.loading?h('p',{class:'muted'},'Loading…'):HIST.err?h('p',{class:'pm-err'},HIST.err):items.length?items:h('p',{class:'muted',style:{margin:'4px 2px'}},'No saved copies yet. Copies are kept from now on, every time this page syncs.'),
+    h('p',{class:'muted',style:{margin:'6px 4px 0',fontSize:'12px'}},'Copies are kept for 10 days. Restoring makes the old copy the newest one, and the version you had before is kept here too.'));
+  const foot=sel&&HIST.sel>0?h('div',{class:'hist-foot'},h('button',{class:'btn pri',onclick:()=>restoreVersion(p,sel)},'Restore this version'),h('button',{class:'btn',onclick:()=>{ HIST.sel=null; renderHistory(); renderView(); }},'Back to now')):null;
+  if(!el){ el=h('aside',{class:'cm-panel',id:'hist-panel','aria-label':'Page history'}); document.body.append(el); }
+  el.replaceChildren(h('div',{class:'cm-head'},h('h2',{},'Page history'),h('button',{class:'icon-btn','aria-label':'Close page history',onclick:closeHistory},ic('x',17))),body,foot);
+  document.body.classList.add('cm-on');
+}
+const KEEP_ON_RESTORE=['id','parent','space','dbId','kind','share','trashed','trashedAt','sort','created','fav'];
+function restoreVersion(p,v){
+  const before=cl(p), when=histWhen(v.updated), data=cl(v.data||{});
+  Object.keys(p).forEach(k=>{ if(!KEEP_ON_RESTORE.includes(k)) delete p[k]; });
+  Object.keys(data).forEach(k=>{ if(!KEEP_ON_RESTORE.includes(k)) p[k]=data[k]; });
+  p.blocks=p.blocks||[blk('p')]; touch(p); HIST.sel=null; renderView(); renderSidebar(); syncNow();
+  toast('Restored the version from '+when,{label:'Undo',fn:()=>{ Object.keys(p).forEach(k=>delete p[k]); Object.assign(p,before); touch(p); renderView(); renderSidebar(); syncNow(); }});
+  setTimeout(()=>{ if(HIST.p===p) openHistory(p); },2500);
+}
+/* what the page looked like in the chosen copy, compared with now */
+function historyPreview(p,v){
+  const old=(v.data&&v.data.blocks)||[], now=p.blocks||[], N=new Map(now.map(b=>[b.id,b])), O=new Map(old.map(b=>[b.id,b]));
+  const out=old.map(b=>({b,k:!N.has(b.id)?'back':blockSig(N.get(b.id))!==blockSig(b)?'chg':''}));
+  let prev=null; now.forEach(b=>{ if(O.has(b.id)){ prev=b.id; return; } const at=prev?out.findIndex(x=>x.b.id===prev)+1:0; out.splice(at,0,{b,k:'gone'}); prev=b.id; });
+  const line=({b,k})=>{ const t=b.type==='code'?String(b.text||''):textLines(b.text); const D=b.data||{};
+    const txt=TEXT.has(b.type)?({bullet:'• ',num:'· ',todo:b.checked?'☑ ':'☐ '}[b.type]||'')+t:b.type==='image'?'[Photo'+(D.caption?': '+D.caption:'')+']':b.type==='table'?'[Table · '+((D.rows||[]).length)+' rows]':b.type==='draw'?'[Drawing]':b.type==='divider'?'———':b.type==='link'?(D.url||''):b.type==='pagelink'?'[Link to a page]':t;
+    return h('div',{class:'hp-l hp-'+b.type+(k?' hp-'+k:''),style:b.indent?{marginLeft:(b.indent*24)+'px'}:null},txt||' '); };
+  return h('div',{class:'hist-prev'},
+    h('div',{class:'hp-legend'},h('span',{},h('i',{class:'hp-sw back'}),'In this copy, not now (will come back)'),h('span',{},h('i',{class:'hp-sw chg'}),'Different now'),h('span',{},h('i',{class:'hp-sw gone'}),'Added after this copy (will go away)')),
+    (v.data&&(v.data.title||'')!==(p.title||''))?h('div',{class:'hp-l hp-title hp-chg'},'Title: '+(v.data.title||'Untitled')):null,
+    out.map(line));
+}
 /* ---- the shared view (opened from someone's link) ---- */
 async function bootShared(token,by){
   SHARED={by:(by||'').slice(0,40),token,perm:'view',root:null,base:{},baseData:{},hash:{},dirty:new Set(),mine:{},timer:null,busy:false,dead:false,tries:0};
@@ -1662,7 +1790,7 @@ async function sharedPush(){
   if(typedRecently()){ clearTimeout(SHARED.timer); SHARED.timer=setTimeout(sharedPush,1200); return; }   // save when you pause, so the combine step isn't skipped
   SHARED.busy=true; sharedBar();
   sharedChanged(true);
-  const ids=[...SHARED.dirty]; const rows=ids.map(pid=>({id:'p:'+pid,data:cl(S.pages[pid]),updated:Date.now(),base:SHARED.base[pid]||0}));
+  const ids=[...SHARED.dirty]; const rows=ids.map(pid=>({id:'p:'+pid,data:cl(S.pages[pid]),updated:Date.now(),base:SHARED.base[pid]||0,author:(cmName()||'Someone').slice(0,40)+' (link)'}));
   try{
     const refused=new Set(await rpc('shared_push',{p_token:SHARED.token,p_rows:rows})||[]);
     rows.forEach(r=>{ const pid=r.id.slice(2);
@@ -1740,6 +1868,11 @@ function copyText(text){
   try{ navigator.clipboard.writeText(text).then(()=>toast('Copied'),fallback); }catch(e){ fallback(); }
 }
 
+
+/* phone: Home / Calendar / Search / Pages at the bottom */
+function renderBnav(){ const n=$('#bnav'); if(!n) return;
+  const b=(icon,label,on,fn)=>h('button',{class:on?'on':'','aria-current':on?'page':null,onclick:fn},ic(icon,22),h('span',{},label));
+  n.replaceChildren(b('home','Home',R.v==='home',()=>go('home')),b('calendar','Calendar',R.v==='calendar',()=>go('calendar')),b('search','Search',false,openSearch),b('page','Pages',document.body.classList.contains('sb-open'),()=>document.body.classList.add('sb-open'))); }
 /* ---------- navigation ---------- */
 function go(v,id){ if(SHARED&&(v!=='page'||!S.pages[id])) return; closeSlash(); closePop(); R={v,id}; document.body.classList.remove('sb-open'); renderView(); renderSidebar(); $('#view').scrollTop=0; }
 let sbT=null; function sidebarSoon(){ clearTimeout(sbT); sbT=setTimeout(renderSidebar,250); }
@@ -1839,7 +1972,7 @@ function renderView(){
   else { node=viewHome(); title='Home'; }
   if(R.v!=='page'){ curPage=null; editorEl=null; }
   const nav=SHARED&&R.v==='page'?sharedNav():null;
-  v.replaceChildren(nav?h('div',{class:'sh-wrap'},nav,h('div',{class:'sh-main'},node)):node); $('#tb-title').textContent=title; lockIfViewOnly();
+  v.replaceChildren(nav?h('div',{class:'sh-wrap'},nav,h('div',{class:'sh-main'},node)):node); $('#tb-title').textContent=title; lockIfViewOnly(); renderBnav();
 }
 
 /* ===== Weekly to-dos ===== */
@@ -2294,6 +2427,7 @@ function pageMenu(anchor,p){
     !p.dbId&&p.kind!=='journal'?{label:'Move to…',icon:'chevr',fn:()=>popover(anchor,[{title:'Move to space'},...S.spaces.filter(s=>s.id!==p.space||p.parent).map(s=>({label:s.name,dot:s.color,fn:()=>{ p.space=s.id; p.parent=null; descendants(p.id).forEach(d=>d.space=s.id); touch(p); renderView(); renderSidebar(); toast('Moved to '+s.name); }}))])}:null,
     !p.dbId&&p.kind!=='journal'&&siblingsOf(p).indexOf(p)>0?{label:'Move up in sidebar',icon:'up',fn:()=>movePageBy(p,-1)}:null,
     !p.dbId&&p.kind!=='journal'&&siblingsOf(p).indexOf(p)>-1&&siblingsOf(p).indexOf(p)<siblingsOf(p).length-1?{label:'Move down in sidebar',icon:'down',fn:()=>movePageBy(p,1)}:null,
+    !SHARED&&SY.key&&p.kind!=='db'?{label:'Page history',icon:'refresh',fn:()=>openHistory(p)}:null,
     p.kind!=='db'&&p.blocks?{label:'Copy all text',icon:'copy',fn:()=>writeClip(blocksText(p,p.blocks,true),blocksHtml(p,p.blocks,true))}:null,
     p.kind!=='db'?{label:'Duplicate',icon:'copy',fn:()=>{ const c=JSON.parse(JSON.stringify(p)); c.id=uid(); c.title=titleOf(p)+' (copy)'; c.fav=false; c.created=c.updated=Date.now(); c.blocks.forEach(b=>b.id=uid()); if(c.kind==='journal'){c.kind='page';c.space=c.space||JOURNAL;} S.pages[c.id]=c; save(); go('page',c.id); }}:null,
     '-',
@@ -2303,6 +2437,7 @@ function pageMenu(anchor,p){
 function trashPage(p){ p.trashed=true; p.trashedAt=Date.now(); save(); go(p.parent&&alive(S.pages[p.parent]||{})?'page':'home',p.parent||undefined); if(p.dbId) go('page',p.dbId); toast('Moved to trash',{label:'Undo',fn:()=>{p.trashed=false;save();go('page',p.id);}}); }
 
 function viewPage(p){
+  if(HIST.p&&HIST.p!==p) closeHistory();
   curPage=p; if(CM.pageId!==p.id){ CM.pageId=p.id; CM.focus=null; CM.panel=false; const cp=$('#cm-panel'); if(cp) cp.remove(); document.body.classList.remove('cm-on'); if(!SHARED&&SY.key&&(p.share||CM.sum[p.id])) cmLoad(p.id); }
   const root=h('div',{});
   if(p.cover) root.append(h('div',{class:'cover',style:{background:`var(--s-${p.cover})`}}));
@@ -2325,6 +2460,7 @@ function viewPage(p){
   if(p.kind==='journal') doc.append(moodRow(p));
   if(p.dbId&&S.pages[p.dbId]) doc.append(propsPanel(p,S.pages[p.dbId]));
   if(p.kind==='db') doc.append(mountDb(p));
+  else if(HIST.p===p&&HIST.sel!=null&&HIST.list[HIST.sel]&&HIST.sel>0){ editorEl=null; doc.append(h('div',{class:'hp-chip'},'Looking at: '+histWhen(HIST.list[HIST.sel].updated)),historyPreview(p,HIST.list[HIST.sel])); }
   else doc.append(blocksEditor(p));
   if(p.kind!=='db'&&!p.dbId){ const kids=children(p.id); if(kids.length) doc.append(h('div',{class:'sublist'},h('div',{class:'sec-l',style:{padding:'0 6px 4px'}},'Sub-pages'),kids.map(k=>h('button',{class:'plink',onclick:()=>go('page',k.id)},k.icon?h('span',{},k.icon):ic(kindIcon(k),16),titleOf(k))))); }
   if(!p.title&&p.kind!=='journal') setTimeout(()=>ttl.focus(),30);
@@ -3036,12 +3172,14 @@ function valueView(col,v){
 function mountDb(p){ const holder=h('div',{}); const draw=()=>holder.replaceChildren(dbInner(p,draw)); draw(); return holder; }
 function dbInner(db,draw){
   const V=[['table','Table','table'],['board','Board','board'],['calendar','Calendar','calendar'],['gallery','Gallery','gallery']];
+  if(SHARED&&db.db.view==='content') return contentView(db,draw);
   if(SHARED){ const cols=db.db.cols, rs=rows(db); const gal=db.db.view==='gallery'||cols.some(c=>/prompt/i.test(c.name)); return h('div',{},gal?galView(db,cols,rs,draw):tableView(db,cols,rs,draw)); }
   const bar=h('div',{class:'dbbar'},
     h('span',{class:'sp'}),
     h('button',{class:'btn sm',onclick:()=>propEditor(db,draw)},ic('props',15),'Properties'),
     h('button',{class:'btn sm pri',onclick:()=>{ const r=newRow(db); go('page',r.id); }},ic('plus',15),'New'));
   const cols=db.db.cols, rs=rows(db);
+  if(db.db.view==='content') return contentView(db,draw);
   const gal=db.db.view==='gallery'||cols.some(c=>/prompt/i.test(c.name));
   if(gal){ const nb=bar.querySelector('.btn.pri'); if(nb) nb.replaceWith(h('button',{class:'btn sm pri',onclick:()=>promptModal(db,null,draw)},ic('plus',15),'New prompt')); }
   const body=gal?galView(db,cols,rs,draw):tableView(db,cols,rs,draw);
@@ -3052,6 +3190,48 @@ function tableView(db,cols,rs,draw){
     h('thead',{},h('tr',{},cols.map(c=>h('th',{scope:'col'},h('button',{onclick:()=>propEditor(db,draw)},ic(COLICON[c.type],13),c.name))),h('th',{style:{width:'44px'}},h('button',{'aria-label':'Add property',onclick:()=>{ db.db.cols.push({id:uid(),name:'Property',type:'text'}); touch(db); propEditor(db,draw); }},ic('plus',14))))),
     h('tbody',{},rs.map(r=>h('tr',{},cols.map(c=>h('td',{},cellEditor(db,r,c,true))),h('td',{},h('button',{class:'icon-btn','aria-label':'Open '+titleOf(r),title:'Open as page',onclick:()=>go('page',r.id)},ic('open',15)))))));
   return h('div',{},h('div',{class:'tscroll'},t,h('button',{class:'addrow',onclick:()=>{ const r=newRow(db); draw(); const inp=document.querySelectorAll('.dbt tbody tr'); const last=inp[inp.length-1]; if(last){ const i=last.querySelector('input'); if(i) i.focus(); } }},ic('plus',15),'New row')));
+}
+
+/* ---- content board: posts by stage, or on a calendar ---- */
+const CB={};
+function contentView(db,draw){
+  const cols=db.db.cols, st=CB[db.id]||(CB[db.id]={mode:'board',plat:null});
+  const status=cols.find(c=>c.type==='select'&&/status|stage/i.test(c.name))||cols.find(c=>c.type==='select');
+  const plat=cols.find(c=>c.type==='select'&&c!==status&&/platform/i.test(c.name))||cols.find(c=>c.type==='select'&&c!==status);
+  const date=cols.find(c=>c.type==='date');
+  let rs=rows(db); if(plat&&st.plat) rs=rs.filter(r=>r.props[plat.id]===st.plat);
+  const ro=SHARED&&SHARED.perm!=='edit';
+  const seg=(k,l)=>h('button',{class:st.mode===k?'on':'','aria-pressed':String(st.mode===k),onclick:()=>{ st.mode=k; draw(); }},l);
+  const head=h('div',{class:'cb-head'},
+    h('div',{class:'seg'},seg('board','Board'),seg('cal','Calendar')),
+    plat?h('div',{class:'cb-plats'},[null,...(plat.options||[])].map(o=>{ const on=st.plat===o, c=o?optColor(plat,o):null;
+      return h('button',{class:'pm-chip'+(on?' on':''),'aria-pressed':String(on),style:on?(o?{background:`var(--s-${c})`,color:`var(--c-${c})`,borderColor:`var(--c-${c})`}:{background:'var(--ink)',color:'var(--bg)',borderColor:'var(--ink)'}):{},onclick:()=>{ st.plat=o; draw(); }},o||'All'); })):null,
+    h('span',{style:{flex:1}}),
+    SHARED?null:h('button',{class:'btn sm pri',onclick:()=>{ const r=newRow(db,Object.assign({},status?{[status.id]:(status.options||[])[0]||null}:{},plat&&st.plat?{[plat.id]:st.plat}:{})); go('page',r.id); }},ic('plus',15),'New post'));
+  let body;
+  if(st.mode==='cal') body=calView(db,cols,rs,draw);
+  else if(!status) body=boardView(db,cols,rs,draw);
+  else {
+    const opts=status.options||[];
+    body=h('div',{class:'board cb-board'},opts.map((g,gi)=>{
+      const items=rs.filter(r=>(r.props[status.id]||opts[0])===g).sort((a,b)=>String(a.props[date&&date.id]||'9999').localeCompare(String(b.props[date&&date.id]||'9999')));
+      const c=optColor(status,g);
+      const col=h('div',{class:'bcol'},
+        h('h3',{},h('span',{class:'cb-dot',style:{background:`var(--c-${c})`}}),h('span',{class:'cb-name'},g),h('span',{class:'cnt'},items.length)),
+        items.map(r=>{ const pv=plat&&r.props[plat.id], dv=date&&r.props[date.id];
+          const mv=(d,lab)=>h('button',{class:'cb-mv','aria-label':'Move to '+opts[gi+d],onclick:e=>{ e.stopPropagation(); r.props[status.id]=opts[gi+d]; touch(r); draw(); }},lab);
+          const card=h('div',{class:'bcard cb-card',draggable:ro?'false':'true',tabindex:'0',role:'button','aria-label':'Open '+titleOf(r),onclick:()=>go('page',r.id),onkeydown:e=>{ if(e.key==='Enter') go('page',r.id); }},
+            h('b',{},titleOf(r)),
+            h('div',{class:'chips'},pv?valueView(plat,pv):null,dv?h('span',{class:'cb-date'},fmtShort(dv)):null),
+            ro?null:h('div',{class:'cb-mvs'},gi>0?mv(-1,'‹ '+opts[gi-1]):h('span',{}),gi<opts.length-1?mv(1,opts[gi+1]+' ›'):null));
+          card.addEventListener('dragstart',e=>{ dragRow=r.id; try{e.dataTransfer.setData('text/plain',r.id);}catch(_){ } }); card.addEventListener('dragend',()=>dragRow=null); return card; }),
+        SHARED?null:h('button',{class:'addrow',style:{borderRadius:'8px'},onclick:()=>{ const r=newRow(db,Object.assign({[status.id]:g},plat&&st.plat?{[plat.id]:st.plat}:{})); go('page',r.id); }},ic('plus',15),'Add'));
+      if(!ro){ col.addEventListener('dragover',e=>{ if(!dragRow) return; e.preventDefault(); col.classList.add('over'); });
+        col.addEventListener('dragleave',()=>col.classList.remove('over'));
+        col.addEventListener('drop',e=>{ e.preventDefault(); col.classList.remove('over'); const r=S.pages[dragRow]; if(r){ r.props[status.id]=g; touch(r); draw(); } dragRow=null; }); }
+      return col; }));
+  }
+  return h('div',{},head,body);
 }
 function boardView(db,cols,rs,draw){
   const sc=cols.find(c=>c.type==='select');
@@ -3084,7 +3264,7 @@ function calView(db,cols,rs,draw){
     const evs=rs.filter(r=>r.props[dc.id]===s);
     grid.append(h('div',{class:'cc'+(d.getMonth()!==first.getMonth()?' out':'')+(s===t?' today':'')},
       h('div',{class:'dn'},h('span',{},d.getDate()),h('button',{class:'add','aria-label':'Add on '+fmtShort(s),onclick:()=>{ const r=newRow(db,{[dc.id]:s}); go('page',r.id); }},ic('plus',13))),
-      evs.map(r=>h('button',{class:'cev',onclick:()=>go('page',r.id),title:titleOf(r)},titleOf(r))))); }
+      evs.map(r=>{ const pc=db.db.view==='content'&&cols.find(c=>c.type==='select'&&/platform/i.test(c.name)); const pv=pc&&r.props[pc.id], k=pv?optColor(pc,pv):null; return h('button',{class:'cev',style:k?{background:`var(--s-${k})`,color:`var(--c-${k})`}:null,onclick:()=>go('page',r.id),title:titleOf(r)},titleOf(r)); }))); }
   return h('div',{},h('div',{class:'cal-h'},h('h3',{},fmtMonth(m)),h('button',{class:'icon-btn','aria-label':'Previous month',onclick:()=>shift(-1)},ic('chevl',16)),h('button',{class:'icon-btn','aria-label':'Next month',onclick:()=>shift(1)},ic('chevr',16)),h('button',{class:'btn sm',onclick:()=>{ calMonth[db.id]=t.slice(0,8)+'01'; draw(); }},'Today')),h('div',{style:{overflowX:'auto'}},h('div',{style:{minWidth:'560px'}},grid)));
 }
 function galView(db,cols,rs,draw){
@@ -3252,7 +3432,8 @@ const TPL=[
   {k:'shoot',n:'Shoot plan',d:'Details, prep list, shot list and a camera sketch',i:'camera'},
   {k:'meeting',n:'Meeting notes',d:'Agenda, notes and action items',i:'users'},
   {k:'todo',n:'To-do list',d:'A simple checklist',i:'check'},
-  {k:'db:prompts',n:'Prompt library',d:'AI prompts as cards with a copy button',i:'spark'}
+  {k:'db:prompts',n:'Prompt library',d:'AI prompts as cards with a copy button',i:'spark'},
+  {k:'db:content',n:'Content board',d:'Posts by stage: Idea → Filming → Editing → Posted, plus a calendar',i:'board'}
 ];
 function fromTemplate(k,sp,parent){
   if(k.indexOf('db:')===0) return createDb(k.slice(3),sp,parent);

@@ -90,6 +90,7 @@ declare
 begin
   if v is null then raise exception 'bad key'; end if;
   for r in select * from jsonb_array_elements(p_rows) loop
+    perform set_config('bwj.author', left(coalesce(r->>'author', ''), 60), true);
     insert into public.items as it (vault_id, id, kind, data, updated, deleted, synced_at)
     values (v, r->>'id', r->>'kind', r->'data', (r->>'updated')::bigint,
             coalesce((r->>'deleted')::boolean, false), clock_timestamp())
@@ -262,6 +263,7 @@ begin
   if s.perm <> 'edit' then raise exception 'view only'; end if;
   allowed := array(select public.bwj_share_allowed(s.vault_id, s.page_id, s.include_subs, s.only_ids, s.skip_ids));
   for r in select * from jsonb_array_elements(p_rows) loop
+    perform set_config('bwj.author', left(coalesce(r->>'author', ''), 60), true);
     select * into old from public.items where vault_id = s.vault_id and id = r->>'id';
     if not found or not ((r->>'id') = any(allowed)) or old.deleted
        or coalesce((r->>'deleted')::boolean, false) or jsonb_typeof(r->'data') <> 'object' then
@@ -405,3 +407,94 @@ grant execute on function public.comments_owner(text, text), public.comments_sum
   public.comment_add_owner(text, text, text, text, text, text, text), public.comment_resolve(text, text, text),
   public.comment_delete(text, text), public.shared_comments(text),
   public.shared_comment_add(text, text, text, text, text, text, text) to anon, authenticated;
+
+-- ============================================================
+-- Page history (last 10 days) and photos in Storage (added later; safe to run again)
+-- ============================================================
+create table if not exists public.page_versions (
+  id        bigserial primary key,
+  vault_id  uuid not null references public.vaults(id) on delete cascade,
+  page_id   text not null,
+  author    text not null default '',
+  data      jsonb,
+  created   timestamptz not null default now(),
+  updated   timestamptz not null default now()
+);
+create index if not exists page_versions_page on public.page_versions (vault_id, page_id, updated desc);
+alter table public.page_versions enable row level security;
+revoke all on public.page_versions from anon, authenticated;
+
+-- every time a page is saved, keep a copy. Changes by the same person within 10 minutes share one copy.
+create or replace function public.bwj_keep_version()
+returns trigger language plpgsql security definer set search_path = public as $$
+declare
+  a text := coalesce(current_setting('bwj.author', true), '');
+  pid text := substring(new.id from 3);
+  last_id bigint; last_author text; last_upd timestamptz;
+begin
+  if new.kind <> 'page' or new.deleted or new.data is null then return new; end if;
+  if tg_op = 'UPDATE' and old.data is not distinct from new.data then return new; end if;
+  select id, author, updated into last_id, last_author, last_upd
+  from public.page_versions where vault_id = new.vault_id and page_id = pid order by updated desc limit 1;
+  if last_id is null and tg_op = 'UPDATE' and old.data is not null and not old.deleted then
+    insert into public.page_versions (vault_id, page_id, author, data, created, updated)
+    values (new.vault_id, pid, '', old.data, to_timestamp(old.updated / 1000.0), to_timestamp(old.updated / 1000.0));
+  end if;
+  if last_id is not null and last_author = a and last_upd > now() - interval '10 minutes' then
+    update public.page_versions set data = new.data, updated = now() where id = last_id;
+  else
+    insert into public.page_versions (vault_id, page_id, author, data) values (new.vault_id, pid, a, new.data);
+  end if;
+  -- keep 10 days, plus the last copy from before that (so the page before an edit can always come back)
+  delete from public.page_versions v
+  where v.vault_id = new.vault_id and v.page_id = pid and v.updated < now() - interval '10 days'
+    and v.id <> (select x.id from public.page_versions x where x.vault_id = new.vault_id and x.page_id = pid
+                 and x.updated < now() - interval '10 days' order by x.updated desc limit 1);
+  return new;
+end $$;
+drop trigger if exists bwj_items_versions on public.items;
+create trigger bwj_items_versions after insert or update on public.items
+  for each row execute function public.bwj_keep_version();
+
+-- you: the saved copies of one page, newest first
+create or replace function public.page_history(p_key text, p_page text)
+returns table(id bigint, author text, created timestamptz, updated timestamptz, data jsonb)
+language plpgsql stable security definer set search_path = public, extensions as $$
+declare v uuid := public.bwj_vault(p_key);
+begin
+  if v is null then raise exception 'bad key'; end if;
+  return query select pv.id, pv.author, pv.created, pv.updated, pv.data from public.page_versions pv
+    where pv.vault_id = v and pv.page_id = p_page order by pv.updated desc limit 200;
+end $$;
+
+-- photos: a private folder name per vault, only your devices know it
+alter table public.vaults add column if not exists img_folder text;
+create or replace function public.img_folder(p_key text)
+returns text language plpgsql security definer set search_path = public, extensions as $$
+declare v uuid := public.bwj_vault(p_key); f text;
+begin
+  if v is null then raise exception 'bad key'; end if;
+  select img_folder into f from public.vaults where id = v;
+  if f is null then
+    f := encode(extensions.gen_random_bytes(16), 'hex');
+    update public.vaults set img_folder = f where id = v;
+  end if;
+  return f;
+end $$;
+create or replace function public.bwj_img_folder_ok(p text)
+returns boolean language sql stable security definer set search_path = public as $$
+  select p is not null and length(p) = 32 and exists (select 1 from public.vaults where img_folder = p);
+$$;
+
+revoke all on function public.page_history(text, text), public.img_folder(text), public.bwj_img_folder_ok(text) from public;
+grant execute on function public.page_history(text, text), public.img_folder(text), public.bwj_img_folder_ok(text) to anon, authenticated;
+revoke all on function public.bwj_keep_version() from public, anon, authenticated;
+
+-- the photo bucket: anyone with the exact photo address can see a photo (addresses are long and random);
+-- only images up to 5 MB, and only into your private folder
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('bwj-images', 'bwj-images', true, 5242880, array['image/jpeg', 'image/png', 'image/webp', 'image/gif'])
+on conflict (id) do update set public = true, file_size_limit = excluded.file_size_limit, allowed_mime_types = excluded.allowed_mime_types;
+drop policy if exists "bwj upload images" on storage.objects;
+create policy "bwj upload images" on storage.objects for insert to anon, authenticated
+  with check (bucket_id = 'bwj-images' and public.bwj_img_folder_ok((storage.foldername(name))[1]));
