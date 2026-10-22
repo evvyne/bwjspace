@@ -297,6 +297,9 @@ body.bs-on .blocks .txt{caret-color:transparent}
 .gbtn:hover{background:var(--hover);color:var(--ink)}
 .grip{cursor:grab}
 .blk.dragging{opacity:.4}
+.blocks .blk{-webkit-touch-callout:none}
+body.bd-drag,body.bd-drag *{-webkit-user-select:none!important;user-select:none!important}
+.bd-ghost{position:fixed;z-index:200;pointer-events:none;background:var(--surface);border-radius:8px;box-shadow:var(--shadow);opacity:.95;margin:0!important}
 .blk.drop-above{box-shadow:0 -2px 0 var(--accent)}
 .blk.drop-below{box-shadow:0 2px 0 var(--accent)}
 .bbody{flex:1;min-width:0;display:flex;align-items:flex-start;gap:8px}
@@ -1154,7 +1157,8 @@ select.cell{appearance:auto;cursor:pointer}
   #sb{position:fixed;left:0;top:0;bottom:0;z-index:60;transform:translateX(-102%);transition:transform .22s ease;width:min(300px,86vw);box-shadow:var(--shadow);padding-top:env(safe-area-inset-top,0px)}
   body.sb-open #sb{transform:none}
   body.sb-open #scrim{display:block;position:fixed;inset:0;z-index:55;background:rgba(10,12,14,.35)}
-  .blk{--gw:30px}
+  .blk{--gw:0px;margin-left:calc(var(--ind,0) * 20px)}
+  .blk>.g{display:none}
   .g{padding-right:2px}
   .g .gadd-b{display:none}
   .ta{opacity:1}
@@ -1281,7 +1285,7 @@ const fmtLong=s=>parseYmd(s).toLocaleDateString('en-GB',{weekday:'long',day:'num
 const fmtShort=s=>parseYmd(s).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
 const fmtMonth=s=>parseYmd(s).toLocaleDateString('en-GB',{month:'long',year:'numeric'});
 function ago(t){const s=(Date.now()-t)/1000; if(s<60)return 'just now'; if(s<3600)return Math.floor(s/60)+' min ago'; if(s<86400)return Math.floor(s/3600)+' h ago'; const d=Math.floor(s/86400); return d===1?'yesterday':d+' days ago';}
-const APP_VER='2026.10.20-12';
+const APP_VER='2026.10.22-1';
 /* tell you when a newer version is on GitHub, so every device runs the same version */
 async function checkUpdate(){ if(location.protocol!=='https:') return; try{ const t=await (await fetch('index.html',{cache:'no-store'})).text(); const m=t.match(/APP_VER='([^']+)'/); if(m&&m[1]!==APP_VER&&!checkUpdate.shown){ checkUpdate.shown=true; toast('A new version of Bwjspace is ready.',{label:'Reload',stay:true,fn:()=>location.reload()}); } }catch(e){} }
 setTimeout(checkUpdate,4000); setInterval(()=>{ if(!document.hidden) checkUpdate(); },10*60000); document.addEventListener('visibilitychange',()=>{ if(!document.hidden) checkUpdate(); });
@@ -2844,6 +2848,33 @@ function focusBlock(id,pos){ const el=txtOf(id); if(!el) return; el.focus(); if(
 function caretEdge(el,start){ const s=getSelection(); if(!s.rangeCount) return false; const r=s.getRangeAt(0); if(!r.collapsed) return false; const t=document.createRange(); t.selectNodeContents(el); if(start) t.setEnd(r.startContainer,r.startOffset); else t.setStart(r.endContainer,r.endOffset); return t.toString().length===0; }
 function neighborText(p,b,dir){ let i=p.blocks.indexOf(b)+dir; while(i>=0&&i<p.blocks.length){ if(TEXT.has(p.blocks[i].type)) return p.blocks[i]; i+=dir; } return null; }
 
+/* phones: hold a note line for a moment, then drag it (iPhone browsers don't do mouse-style dragging) */
+const BD={st:null,on:false,ghost:null,row:null,target:null,below:false,auto:null,just:0,timer:null};
+function bdClear(){ document.querySelectorAll('.blk.drop-above,.blk.drop-below').forEach(e=>e.classList.remove('drop-above','drop-below')); }
+function bdStart(){ BD.timer=null; if(!BD.st) return; BD.on=true; BD.row=BD.st.row; document.body.classList.add('bd-drag'); try{ getSelection().removeAllRanges(); }catch(_){ }
+  const r=BD.row.getBoundingClientRect(); const g=BD.row.cloneNode(true); g.classList.add('bd-ghost'); g.style.width=r.width+'px'; g.style.left=r.left+'px'; g.style.top=r.top+'px'; document.body.append(g); BD.ghost=g; BD.row.classList.add('dragging'); try{ navigator.vibrate&&navigator.vibrate(15); }catch(_){ } }
+document.addEventListener('touchstart',e=>{ if(e.touches.length!==1||!matchMedia('(max-width:860px)').matches) return; const row=e.target.closest&&e.target.closest('.blocks .blk[data-id]'); if(!row||!row._p||SHARED&&SHARED.perm!=='edit') return;
+  if(row.contains(document.activeElement)&&document.activeElement!==document.body) return;   // typing in this line: long-press selects text as usual
+  if(e.target.closest('input,button,a,.dcan,.ihandle,.dres,.tbl,img')) return;
+  const t=e.touches[0]; BD.st={x:t.clientX,y:t.clientY,row}; clearTimeout(BD.timer); BD.timer=setTimeout(bdStart,450); },{passive:true});
+document.addEventListener('touchmove',e=>{ if(!BD.st) return; const t=e.touches[0]; if(!t) return;
+  if(!BD.on){ if(Math.abs(t.clientX-BD.st.x)>8||Math.abs(t.clientY-BD.st.y)>8){ clearTimeout(BD.timer); BD.timer=null; BD.st=null; } return; }
+  e.preventDefault();
+  BD.ghost.style.transform='translateY('+(t.clientY-BD.st.y)+'px)';
+  bdClear(); BD.target=null;
+  const el=document.elementFromPoint(BD.st.x+40>innerWidth?innerWidth/2:BD.st.x+40,t.clientY); const row=el&&el.closest&&el.closest('.blk[data-id]');
+  if(row&&row!==BD.row&&row._p===BD.row._p&&row.parentNode===BD.row.parentNode){ const r=row.getBoundingClientRect(); BD.below=t.clientY>r.top+r.height/2; row.classList.add(BD.below?'drop-below':'drop-above'); BD.target=row; }
+  const sc=document.getElementById('view'); cancelAnimationFrame(BD.auto); if(sc){ const v=t.clientY<90?-10:t.clientY>innerHeight-110?10:0; if(v){ const step=()=>{ sc.scrollTop+=v; BD.auto=requestAnimationFrame(step); }; BD.auto=requestAnimationFrame(step); } }
+},{passive:false});
+function bdEnd(drop){ cancelAnimationFrame(BD.auto); clearTimeout(BD.timer); BD.timer=null; document.body.classList.remove('bd-drag');
+  if(BD.on){ bdClear(); if(BD.ghost) BD.ghost.remove(); BD.row.classList.remove('dragging'); BD.just=Date.now();
+    const p=BD.row._p, id=BD.row.dataset.id, t=BD.target;
+    if(drop&&p&&t){ const from=p.blocks.findIndex(x=>x.id===id), tb=p.blocks.find(x=>x.id===t.dataset.id); if(from>-1&&tb){ const [m]=p.blocks.splice(from,1); const to=p.blocks.indexOf(tb)+(BD.below?1:0); p.blocks.splice(to,0,m); touch(p); fillBlocks(p); } } }
+  BD.st=null; BD.on=false; BD.ghost=null; BD.row=null; BD.target=null; }
+document.addEventListener('touchend',e=>{ if(BD.on) e.preventDefault(); bdEnd(true); },{passive:false});
+document.addEventListener('contextmenu',e=>{ if((BD.on||BD.timer)&&e.target.closest&&e.target.closest('.blocks .blk')) e.preventDefault(); },true);
+document.addEventListener('touchcancel',()=>bdEnd(false));
+document.addEventListener('click',e=>{ if(Date.now()-BD.just<500&&e.target.closest&&e.target.closest('.blk')){ e.preventDefault(); e.stopPropagation(); } },true);
 function addSwipe(row,p,b){
   let st=null;
   row.addEventListener('pointerdown',e=>{ if(e.pointerType!=='touch'||e.target.closest('.dcan,.ihandle,.dres,.g,.tbl,input,button,a')) return; st={x:e.clientX,y:e.clientY,id:e.pointerId,on:false}; });
@@ -2858,7 +2889,7 @@ function addSwipe(row,p,b){
 }
 function renderBlock(p,b,n){
   const L=b.indent||0;
-  const row=h('div',{class:'blk t-'+b.type+(b.type==='todo'&&b.checked?' done':''),'data-id':b.id,style:L?{'--ind':L}:null});
+  const row=h('div',{class:'blk t-'+b.type+(b.type==='todo'&&b.checked?' done':''),'data-id':b.id,style:L?{'--ind':L}:null}); row._p=p;
   addSwipe(row,p,b);
   const grip=h('button',{class:'gbtn grip',draggable:'true',title:'Drag to move · click for options','aria-label':'Block options',onclick:e=>blockMenu(e.currentTarget,p,b)},ic('grip',15));
   grip.addEventListener('dragstart',e=>{ dragId=b.id; try{e.dataTransfer.setData('text/plain',b.id);}catch(_){ } e.dataTransfer.effectAllowed='move'; row.classList.add('dragging'); });

@@ -1,5 +1,5 @@
 // Lets Bwjspace open without internet. Always tries the network first so you get updates.
-const CACHE = 'bwjspace-v32';
+const CACHE = 'bwjspace-v33';
 const FILES = ['./', 'index.html', 'config.js', 'supabase.js', 'qr.js', 'jspdf.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'favicon.png', 'icon-maskable-512.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE && k !== 'bwjspace-img').map(k => caches.delete(k)))).then(() => self.clients.claim())); });
