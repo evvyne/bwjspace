@@ -368,6 +368,7 @@ hr.div{flex:1;border:0;border-top:1px solid var(--line-2);margin:14px 0}
 .tbul i{width:7px;height:7px;border-radius:50%;background:var(--ink-2);display:block;transition:transform .12s,background .12s}
 .tbul:hover i{background:var(--accent);transform:scale(1.35)}
 .tbul.on i{background:var(--accent)}
+.tbul.plain{cursor:default}.tbul.plain:hover i{background:var(--ink-2);transform:none}
 .tbul:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .task.fading{opacity:.25;transition:opacity .8s}
 .tfoot{display:flex;align-items:center;gap:10px}
@@ -1285,7 +1286,9 @@ const fmtLong=s=>parseYmd(s).toLocaleDateString('en-GB',{weekday:'long',day:'num
 const fmtShort=s=>parseYmd(s).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
 const fmtMonth=s=>parseYmd(s).toLocaleDateString('en-GB',{month:'long',year:'numeric'});
 function ago(t){const s=(Date.now()-t)/1000; if(s<60)return 'just now'; if(s<3600)return Math.floor(s/60)+' min ago'; if(s<86400)return Math.floor(s/3600)+' h ago'; const d=Math.floor(s/86400); return d===1?'yesterday':d+' days ago';}
-const APP_VER='2026.10.22-1';
+const APP_VER='2026.10.23-1';
+// Bwjspace to-dos: plain dots (no done), menu = Edit/Delete, Enter while editing adds a line below. Evvspace sets this to false.
+const TODO_SIMPLE=true;
 /* tell you when a newer version is on GitHub, so every device runs the same version */
 async function checkUpdate(){ if(location.protocol!=='https:') return; try{ const t=await (await fetch('index.html',{cache:'no-store'})).text(); const m=t.match(/APP_VER='([^']+)'/); if(m&&m[1]!==APP_VER&&!checkUpdate.shown){ checkUpdate.shown=true; toast('A new version of Bwjspace is ready.',{label:'Reload',stay:true,fn:()=>location.reload()}); } }catch(e){} }
 setTimeout(checkUpdate,4000); setInterval(()=>{ if(!document.hidden) checkUpdate(); },10*60000); document.addEventListener('visibilitychange',()=>{ if(!document.hidden) checkUpdate(); });
@@ -2355,9 +2358,9 @@ function taskItem(k,refresh){
   const grip=h('button',{class:'tgrip','aria-label':'Drag to another day',title:'Drag to another day'},ic('grip',14));
   grip.addEventListener('pointerdown',e=>startTaskDrag(e,k,row,refresh));
   // a bullet (default) or a round checkbox; either way tapping it finishes the to-do
-  const cb=k.style==='check'?h('input',{type:'checkbox',class:'chk',checked:!!k.done,'aria-label':'Done: '+k.text}):h('button',{class:'tbul'+(k.done?' on':''),'aria-label':(k.done?'Not done: ':'Done: ')+k.text,'aria-pressed':String(!!k.done)},h('i',{}));
+  const cb=TODO_SIMPLE?h('span',{class:'tbul plain','aria-hidden':'true'},h('i',{})):k.style==='check'?h('input',{type:'checkbox',class:'chk',checked:!!k.done,'aria-label':'Done: '+k.text}):h('button',{class:'tbul'+(k.done?' on':''),'aria-label':(k.done?'Not done: ':'Done: ')+k.text,'aria-pressed':String(!!k.done)},h('i',{}));
   const flip=v=>{ if(v){ setDone(k,true); finishFade(k,row,refresh); } else { setDone(k,false); refresh(); } };
-  if(k.style==='check') cb.addEventListener('change',()=>flip(cb.checked)); else cb.addEventListener('click',()=>flip(!k.done));
+  if(TODO_SIMPLE){} else if(k.style==='check') cb.addEventListener('change',()=>flip(cb.checked)); else cb.addEventListener('click',()=>flip(!k.done));
   const subs=k.subs||[], sd=subs.filter(s=>s.done).length, open=k.open!==false&&!k.done;
   const r=k.recurId&&recurs().find(x=>x.id===k.recurId);
   const meta=[
@@ -2394,9 +2397,16 @@ function editTask(k,row,refresh){
   row.querySelector('.ttx').replaceWith(inp); inp.focus(); inp.select();
   let fin=false;
   const end=commit=>{ if(fin) return; fin=true; const v=inp.value.trim(); if(commit&&!v){ removeTask(k,refresh); return; } if(commit&&v!==k.text){ const pt=parseTime(v); k.text=pt.text; if(pt.time){ k.time=pt.time; placeByTime(k); } syncRule(k); } save(); refresh(); };
-  inp.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.isComposing){ e.preventDefault(); end(true); } if(e.key==='Escape'){ e.preventDefault(); end(false); } });
+  inp.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.isComposing){ e.preventDefault(); if(TODO_SIMPLE&&inp.value.trim()){ addingDay=k.date||'someday'; addingAfter=k.id; } end(true); focusAdd(); } if(e.key==='Escape'){ e.preventDefault(); end(false); } });
   inp.addEventListener('blur',()=>{ if(inp.isConnected) end(true); });
 }
+// keep the phone keyboard up: focus the new line inside the same tap
+function focusAdd(){ const i=document.querySelector('.tadd-row input'); if(i) i.focus(); }
+// a new to-do typed right after another one goes straight below it
+function newTask(day,list,v){ const pt=parseTime(v); const k={id:uid(),text:pt.text,time:pt.time,date:keyOf(day),done:false,created:Date.now(),order:list.length+1}; tasks().push(k);
+  const at=addingAfter?list.findIndex(x=>x.id===addingAfter):-1; if(at>=0){ const L=list.slice(); L.splice(at+1,0,k); L.forEach((x,j)=>x.order=j); addingAfter=k.id; }
+  placeByTime(k); save(); }
+function placeAdd(box,row){ const t=addingAfter&&box.querySelector(`.tlist [data-task="${addingAfter}"]`); if(!t){ box.append(row); return; } let el=t; while(el.parentElement&&!el.parentElement.classList.contains('tlist')) el=el.parentElement; el.after(row); }
 function removeTask(k,refresh){ const L=tasks(); const i=L.indexOf(k); if(i<0) return; L.splice(i,1); save(); refresh(); toast(k.recurId?'Deleted this one only. It still repeats.':'To-do deleted',{label:'Undo',fn:()=>{ L.splice(i,0,k); save(); refresh(); }}); }
 function moveTask(k,day,refresh,beforeId){
   k.date=keyOf(day); k.carried=false; k.missed=false;
@@ -2413,6 +2423,9 @@ function taskMenu(anchor,k,refresh){
   ti.addEventListener('change',()=>{ k.time=ti.value||null; placeByTime(k); syncRule(k); save(); refresh(); });
   const mv=(d,label)=>({label,icon:'chevr',fn:()=>{ moveTask(k,d,refresh); toast('Moved to '+fmtDay(d)); }});
   const r=k.recurId&&recurs().find(x=>x.id===k.recurId);
+  if(TODO_SIMPLE){ popover(anchor,[
+    {label:'Edit',icon:'pen',fn:()=>{ const row=document.querySelector(`[data-task="${k.id}"]`); if(row) editTask(k,row,refresh); }},
+    {label:k.recurId?'Delete this one':'Delete',icon:'trash',danger:true,fn:()=>removeTask(k,refresh)}]); return; }
   popover(anchor,[
     {title:'Move to'},
     k.date!==t?mv(t,'Today'):null,
@@ -2481,7 +2494,7 @@ function startTaskDrag(e,k,row,refresh){
     const changed=keyOf(d.target)!==(k.date||null); moveTask(k,d.target,refresh,d.before); if(changed) toast('Moved to '+fmtDay(d.target)); };
   document.addEventListener('pointermove',move); document.addEventListener('pointerup',up); document.addEventListener('pointercancel',up);
 }
-let addingDay=null;
+let addingDay=null, addingAfter=null;
 function dayColumn(day,refresh,long){
   const t=todayStr(), sd=day==='someday', d=sd?null:parseYmd(day), list=dayTasks(day), open=list.filter(x=>!x.done).length;
   const col=h('section',{class:'day'+(sd?' someday':'')+(day===t?' today':'')+(!sd&&day<t?' past':'')+(list.length?'':' empty'),'data-day':day,'aria-label':sd?'Someday':fmtLong(day)},
@@ -2491,14 +2504,14 @@ function dayColumn(day,refresh,long){
       day===t?h('span',{class:'dtoday'},'Today'):null,
       h('span',{class:'dcount'},list.length?(open?open+' left':'All done'):'')),
     h('div',{class:'tlist'},list.map(k=>taskItem(k,refresh))));
-  const addBtn=()=>h('button',{class:'tadd',onclick:()=>{ addingDay=day; refresh(); }},ic('plus',14),sd?'Add to Someday':'Add to-do');
+  const addBtn=()=>h('button',{class:'tadd',onclick:()=>{ addingDay=day; addingAfter=null; refresh(); }},ic('plus',14),sd?'Add to Someday':'Add to-do');
   if(addingDay===day){
     const inp=h('input',{class:'tinput autofocus',placeholder:sd?'Something to do one day':'New to-do  (try “3pm call studio”)','aria-label':'New to-do for '+(sd?'Someday':fmtLong(day))});
-    const add=v=>{ const pt=parseTime(v); const k={id:uid(),text:pt.text,time:pt.time,date:keyOf(day),done:false,created:Date.now(),order:list.length+1}; tasks().push(k); placeByTime(k); save(); };
+    const add=v=>newTask(day,list,v);
     let closing=false;
-    inp.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.isComposing){ e.preventDefault(); closing=true; const v=inp.value.trim(); if(v){ add(v); refresh(); } else { addingDay=null; refresh(); } } if(e.key==='Escape'){ closing=true; addingDay=null; refresh(); } });
-    inp.addEventListener('blur',()=>{ if(closing||!inp.isConnected) return; closing=true; const v=inp.value.trim(); addingDay=null; if(v){ add(v); refresh(); } else inp.parentNode.replaceWith(addBtn()); });
-    col.append(h('div',{class:'tadd-row'},inp)); setTimeout(()=>{ if(inp.isConnected) inp.focus(); },0);
+    inp.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.isComposing){ e.preventDefault(); closing=true; const v=inp.value.trim(); if(v){ add(v); refresh(); focusAdd(); } else { addingDay=null; addingAfter=null; refresh(); } } if(e.key==='Escape'){ closing=true; addingDay=null; addingAfter=null; refresh(); } });
+    inp.addEventListener('blur',()=>{ if(closing||!inp.isConnected) return; closing=true; const v=inp.value.trim(); addingDay=null; if(v){ add(v); addingAfter=null; refresh(); } else { addingAfter=null; inp.parentNode.replaceWith(addBtn()); } });
+    placeAdd(col,h('div',{class:'tadd-row'},inp)); setTimeout(()=>{ if(inp.isConnected) inp.focus(); },0);
   } else col.append(addBtn());
   return col;
 }
@@ -2508,7 +2521,7 @@ function listDay(day,refresh){
   const open=list.filter(x=>!x.done).length, doneN=list.length-open;
   const past=!sd&&day<t, collapsed=past&&!openPast.has(day), adding=addingDay===day;
   const cnt=past?(list.length?(doneN?doneN+' done':'')+(doneN&&open?' · ':'')+(open?open+' open':''):'No to-dos'):(list.length?(open?open+' left':'All done'):'');
-  const addBtn=(inline)=>h('button',{class:'tadd'+(inline?' inline':''),onclick:()=>{ addingDay=day; if(past) openPast.add(day); refresh(); }},ic('plus',14),sd?'Add to Someday':'Add to-do');
+  const addBtn=(inline)=>h('button',{class:'tadd'+(inline?' inline':''),onclick:()=>{ addingDay=day; addingAfter=null; if(past) openPast.add(day); refresh(); }},ic('plus',14),sd?'Add to Someday':'Add to-do');
   const parts=[
     sd?h('span',{class:'dname'},'Someday'):h('span',{class:'dname'},d.toLocaleDateString('en-GB',{weekday:'long'})),
     h('span',{class:'ddate'},sd?'No date yet':d.toLocaleDateString('en-GB',{day:'numeric',month:'short'})),
@@ -2524,11 +2537,11 @@ function listDay(day,refresh){
   const doneLink=doneN?h('button',{class:'tdone-l',onclick:()=>{ showDoneDays.has(day)?showDoneDays.delete(day):showDoneDays.add(day); refresh(); }},showDoneDays.has(day)?'Hide done':doneN+' done · show'):null;
   if(adding){
     const inp=h('input',{class:'tinput autofocus',placeholder:sd?'Something to do one day':'New to-do  (try “3pm call studio”)','aria-label':'New to-do for '+(sd?'Someday':fmtLong(day))});
-    const add=v=>{ const pt=parseTime(v); const k={id:uid(),text:pt.text,time:pt.time,date:keyOf(day),done:false,created:Date.now(),order:list.length+1}; tasks().push(k); placeByTime(k); save(); };
+    const add=v=>newTask(day,list,v);
     let closing=false;
-    inp.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.isComposing){ e.preventDefault(); closing=true; const v=inp.value.trim(); if(v){ add(v); refresh(); } else { addingDay=null; refresh(); } } if(e.key==='Escape'){ closing=true; addingDay=null; refresh(); } });
-    inp.addEventListener('blur',()=>{ if(closing||!inp.isConnected) return; closing=true; const v=inp.value.trim(); addingDay=null; if(v) add(v); refresh(); });
-    sec.append(h('div',{class:'tadd-row'},inp)); setTimeout(()=>{ if(inp.isConnected) inp.focus(); },0);
+    inp.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.isComposing){ e.preventDefault(); closing=true; const v=inp.value.trim(); if(v){ add(v); refresh(); focusAdd(); } else { addingDay=null; addingAfter=null; refresh(); } } if(e.key==='Escape'){ closing=true; addingDay=null; addingAfter=null; refresh(); } });
+    inp.addEventListener('blur',()=>{ if(closing||!inp.isConnected) return; closing=true; const v=inp.value.trim(); addingDay=null; if(v) add(v); addingAfter=null; refresh(); });
+    placeAdd(sec,h('div',{class:'tadd-row'},inp)); setTimeout(()=>{ if(inp.isConnected) inp.focus(); },0);
   } else if(list.length||sd||past) sec.append(doneLink?h('div',{class:'tfoot'},addBtn(false),doneLink):addBtn(false));
   else if(doneLink) sec.append(doneLink);
   return sec;
@@ -2655,8 +2668,8 @@ function viewReview(){
         h('button',{class:'icon-btn','aria-label':'Next week',onclick:()=>{ revWeek=addDays(ws,7); refresh(); }},ic('chevr',18)))),
     h('p',{class:'dateline',style:{marginBottom:'20px'}},(isThis?'This week · ':'')+fmtRange(ws,we)),
     h('div',{class:'stats'},
-      stat(`${done.length}/${Math.max(inW.length,done.length)}`,'to-dos done'),
-      h('div',{class:'stat'},h('b',{},pct+'%'),h('span',{},'complete'),h('i',{class:'bar'},h('i',{style:{width:pct+'%'}}))),
+      TODO_SIMPLE?null:stat(`${done.length}/${Math.max(inW.length,done.length)}`,'to-dos done'),
+      TODO_SIMPLE?null:h('div',{class:'stat'},h('b',{},pct+'%'),h('span',{},'complete'),h('i',{class:'bar'},h('i',{style:{width:pct+'%'}}))),
       stat(open.length,'still open',open.length?'warn':''),
       (()=>{ const c={Booking:0,Post:0,'To-do':0}; nwItems.forEach(x=>c[x.kind]++); const pl=(n,w)=>n+' '+w+(n===1?'':'s');
         return h('div',{class:'stat plan'},h('b',{},String(nwItems.length)),h('span',{},'things planned for next week'),h('small',{},[pl(c.Booking,'booking'),pl(c.Post,'post'),pl(c['To-do'],'to-do')].join(' · '))); })()),
@@ -2666,9 +2679,9 @@ function viewReview(){
         open.length?[h('div',{class:'tlist'},open.map(k=>taskItem(k,refresh))),
           h('div',{class:'row',style:{marginTop:'6px'}},h('button',{class:'btn sm',onclick:()=>{ open.forEach(k=>{ if(!k.recurId) moveTask(k,nws,()=>{}); }); refresh(); toast('Moved to next Monday'); }},'Move all to next Monday'),h('button',{class:'btn sm',onclick:()=>{ open.forEach(k=>{ if(!k.recurId) moveTask(k,'someday',()=>{}); }); refresh(); toast('Moved to Someday'); }},'Move all to Someday'))]
           :h('p',{class:'muted'},inW.length?'Everything is done. Nice week.':'No to-dos this week.')),
-      reps.length?h('section',{class:'card rv-rep'},h('h2',{},ic('refresh',16),'Repeating'),
+      reps.length&&!TODO_SIMPLE?h('section',{class:'card rv-rep'},h('h2',{},ic('refresh',16),'Repeating'),
         reps.map(({r,total,done})=>h('div',{class:'rep'},h('div',{class:'tx'},h('b',{},r.text),h('small',{},ruleLabel(r))),h('span',{class:'repn'+(done===total?' full':'')},`${done}/${total}`)))):null,
-      done.length?h('section',{class:'card rv-done'},h('h2',{},ic('check',16),'Done',h('span',{class:'cnt'},done.length)),
+      done.length&&!TODO_SIMPLE?h('section',{class:'card rv-done'},h('h2',{},ic('check',16),'Done',h('span',{class:'cnt'},done.length)),
         h('div',{class:'donelist'},done.map(k=>h('div',{class:'dl'},ic('check',13),h('span',{class:'dlt'},k.text),h('small',{},fmtDay(k.date)))))):null),
     h('div',{class:'wk-h'},h('h2',{},'Plan next week'),h('span',{class:'wk-r'},fmtRange(nws,addDays(nws,6))),h('span',{style:{flex:1}}),h('span',{class:'muted'},'Drag from Still open or Someday onto a day.')),
     h('div',{class:'homecols'},h('div',{class:'hmain'},weekList(nws,refresh)),h('aside',{class:'somedaycol'},listDay('someday',refresh)))
