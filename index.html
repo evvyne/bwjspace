@@ -394,6 +394,11 @@ hr.div{flex:1;border:0;border-top:1px solid var(--line-2);margin:14px 0}
 .tadd:hover{background:var(--hover);color:var(--ink-2)}
 .tadd-row{padding:3px 0 4px 4px}
 .tinput{width:100%;height:32px;border:1px solid var(--accent);border-radius:7px;padding:0 8px;background:var(--surface);outline:none;font-size:14px;min-width:0}
+.dz-to{box-shadow:inset 0 0 0 2px var(--accent)!important;border-radius:12px}
+.mc.dz-to{border-radius:0}
+.tline{position:relative;height:3px;margin:20px 4px 20px 12px;border-radius:3px;background:var(--accent);pointer-events:none;animation:tl-in .15s ease-out}
+.tline::before{content:'';position:absolute;left:-6px;top:-4px;width:11px;height:11px;border-radius:50%;background:var(--accent)}
+@keyframes tl-in{from{margin-top:0;margin-bottom:0}}
 .tghost{position:fixed;z-index:95;pointer-events:none;background:var(--surface);box-shadow:var(--shadow);border-radius:8px;opacity:.95}
 
 .wk-act{display:flex;flex-wrap:wrap;gap:6px}
@@ -1286,7 +1291,7 @@ const fmtLong=s=>parseYmd(s).toLocaleDateString('en-GB',{weekday:'long',day:'num
 const fmtShort=s=>parseYmd(s).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
 const fmtMonth=s=>parseYmd(s).toLocaleDateString('en-GB',{month:'long',year:'numeric'});
 function ago(t){const s=(Date.now()-t)/1000; if(s<60)return 'just now'; if(s<3600)return Math.floor(s/60)+' min ago'; if(s<86400)return Math.floor(s/3600)+' h ago'; const d=Math.floor(s/86400); return d===1?'yesterday':d+' days ago';}
-const APP_VER='2026.10.23-1';
+const APP_VER='2026.10.24-1';
 // Bwjspace to-dos: plain dots (no done), menu = Edit/Delete, Enter while editing adds a line below. Evvspace sets this to false.
 const TODO_SIMPLE=true;
 /* tell you when a newer version is on GitHub, so every device runs the same version */
@@ -2479,17 +2484,26 @@ function startTaskDrag(e,k,row,refresh){
   row.classList.add('dragging');
   const d={k,dx:e.clientX-r.left,dy:e.clientY-r.top,y:e.clientY,target:null,before:null,moved:false};
   const view=$('#view');
-  const clear=()=>{ document.querySelectorAll('.dz-over').forEach(z=>z.classList.remove('dz-over')); document.querySelectorAll('.task.ins').forEach(x=>x.classList.remove('ins')); };
+  // where it will land: the day gets a teal outline, the list opens a gap with a teal line in it
+  const line=h('div',{class:'tline'}); let zoneEl=null, at;
+  const clear=()=>{ if(zoneEl) zoneEl.classList.remove('dz-to'); zoneEl=null; at=undefined; line.remove(); };
   const move=ev=>{ d.y=ev.clientY; d.moved=true;
     ghost.style.left=(ev.clientX-d.dx)+'px'; ghost.style.top=(ev.clientY-d.dy)+'px';
-    const el=document.elementFromPoint(ev.clientX,ev.clientY); clear();
-    const zone=el&&el.closest('[data-day]'); d.target=zone?zone.dataset.day:null; d.before=null;
-    if(!zone) return; zone.classList.add('dz-over');
-    const it=el.closest('[data-task]');
-    if(it&&it!==row&&zone.contains(it)){ const ir=it.getBoundingClientRect(); let b=ev.clientY<ir.top+ir.height/2?it:it.nextElementSibling; if(b&&b.dataset&&b.dataset.task&&b!==row){ d.before=b.dataset.task; b.classList.add('ins'); } } };
+    const el=document.elementFromPoint(ev.clientX,ev.clientY);
+    const zone=el&&el.closest('[data-day]');
+    if(!zone){ clear(); d.target=null; d.before=null; return; }
+    if(zone!==zoneEl){ clear(); zoneEl=zone; zone.classList.add('dz-to'); }
+    d.target=zone.dataset.day;
+    const list=zone.querySelector('.tlist');
+    if(!list){ d.before=null; return; }
+    const tid=x=>x.dataset&&x.dataset.task||(x.querySelector&&x.querySelector('[data-task]')||{dataset:{}}).dataset.task;
+    const items=[...list.children].filter(x=>x!==line&&tid(x)&&!x.contains(row));
+    const b=items.find(x=>{ const ir=x.getBoundingClientRect(); return ev.clientY<ir.top+ir.height/2; })||null;
+    d.before=b?tid(b):null;
+    if(at!==d.before){ at=d.before; if(b) b.before(line); else list.append(line); } };
   let raf=0; const auto=()=>{ const vr=view.getBoundingClientRect(); if(d.y<vr.top+70) view.scrollTop-=14; else if(d.y>vr.bottom-70) view.scrollTop+=14; raf=requestAnimationFrame(auto); }; raf=requestAnimationFrame(auto);
   const up=ev=>{ cancelAnimationFrame(raf); document.removeEventListener('pointermove',move); document.removeEventListener('pointerup',up); document.removeEventListener('pointercancel',up);
-    ghost.remove(); row.classList.remove('dragging'); clear();
+    ghost.remove(); row.classList.remove('dragging'); const tgt=d.target, bef=d.before; clear(); d.target=tgt; d.before=bef;
     if(ev.type==='pointercancel'||!d.moved||!d.target) return;
     const changed=keyOf(d.target)!==(k.date||null); moveTask(k,d.target,refresh,d.before); if(changed) toast('Moved to '+fmtDay(d.target)); };
   document.addEventListener('pointermove',move); document.addEventListener('pointerup',up); document.addEventListener('pointercancel',up);
@@ -2608,7 +2622,7 @@ function viewHome(){
     h('div',{class:'wk-h'},
       h('h2',{},homeRange?'Your dates':'This week'),h('span',{class:'wk-r'},fmtRange(shownFrom,shownTo)),
       !homeRange&&dow>0?h('button',{class:'pp-edit wk-past',onclick:()=>{ S.ui.showPast=!showPast; save(); refresh(); }},showPast?'Hide past days':'Show past days'):null,
-      inR.length?h('span',{class:'wk-p'},`${done} of ${inR.length} done`):null,
+      inR.length&&!TODO_SIMPLE?h('span',{class:'wk-p'},`${done} of ${inR.length} done`):null,
       h('span',{style:{flex:1}}),
       h('div',{class:'wk-act'},
         homeRange?h('button',{class:'btn sm',onclick:()=>{ homeRange=null; refresh(); }},ic('x',14),'Back to this week')
@@ -2619,7 +2633,7 @@ function viewHome(){
         homeRange?rangeWeeks(from,to,refresh):week(ws),
         !homeRange&&exp?[h('div',{class:'wk-h'},h('h2',{},'Next week'),h('span',{class:'wk-r'},fmtRange(addDays(ws,7),addDays(ws,13)))),week(addDays(ws,7))]:null),
       h('aside',{class:'somedaycol'},listDay('someday',refresh),h('p',{class:'muted sdhint'},'No date yet. Drag one onto a day when you are ready.'))),
-    h('p',{class:'muted',style:{marginTop:'18px'}},'Unfinished to-dos move to the next day on their own. Drag the ⋮⋮ handle to move a to-do, or use ⋯ for time, repeat and steps. Start with a time to schedule it, like “3pm call studio”.')
+    h('p',{class:'muted',style:{marginTop:'18px'}},'Unfinished to-dos move to the next day on their own. Drag the ⋮⋮ handle to move a to-do, '+(TODO_SIMPLE?'or tap a to-do to edit it and press Enter to add one below it. ':'or use ⋯ for time, repeat and steps. ')+'Start with a time to schedule it, like “3pm call studio”.')
   );
 }
 
