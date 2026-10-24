@@ -763,6 +763,46 @@ button.nw-it:hover{background:var(--hover)}
 .calpanel{display:flex;flex-direction:column;scroll-margin-top:12px}
 .calpanel .day{min-height:200px}
 @media (max-width:600px){.mc{min-height:62px;padding:2px 2px 4px}.cchip{font-size:0;height:5px;padding:0;border-radius:3px;background:var(--ink-3)}.cchip.done{background:var(--line-2)}.cmore{font-size:10px;padding:0}.mn{width:24px;height:24px;font-size:12px}}
+.tt{margin-top:6px}
+.tt-wk{display:flex;align-items:center;gap:6px;margin:0 0 10px;font-weight:600;color:var(--ink-2);font-size:14px}
+.tt-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.tt-d{position:relative;height:54px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink-2);font:600 13.5px var(--f-ui);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;cursor:pointer}
+.tt-d small{font-size:12px;font-weight:500;opacity:.75}
+.tt-d.on{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.tt-d.today::after{content:'';position:absolute;bottom:4px;width:5px;height:5px;border-radius:50%;background:var(--accent)}
+.tt-d.chg::before{content:'';position:absolute;top:5px;right:6px;width:6px;height:6px;border-radius:50%;background:var(--c-amber)}
+.tt-dl{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:14px 0 2px;font-size:15px}
+.tt-kind{font-size:12.5px;font-weight:600;color:var(--c-amber);background:var(--s-amber);border-radius:999px;padding:3px 9px}
+.tt-hint{margin:2px 0 8px;font-size:13px}
+.tt-note{display:block;border:0;background:none;padding:2px 0;margin:2px 0 4px;font:600 14.5px var(--f-ui);color:var(--ink-2);text-align:left;cursor:pointer}
+.tt-note.empty{color:var(--ink-3);font-weight:500;font-size:13.5px}.tt-note.ro{cursor:default}
+.tt-banner{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--s-amber);color:var(--c-amber);border-radius:10px;padding:8px 12px;margin:8px 0 2px;font-size:13.5px;font-weight:600}
+.tt-leg{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:10px 0 12px}
+.tt-chip{height:28px;padding:0 11px;border-radius:999px;font:600 13px var(--f-ui);display:inline-flex;align-items:center;border:1.5px solid transparent}
+button.tt-chip{cursor:pointer}.tt-chip.sel{border-color:currentColor}
+.tt-list{display:flex;flex-direction:column;gap:7px}
+.tt-row{display:grid;grid-template-columns:150px minmax(0,1fr);gap:10px;align-items:center;min-height:48px;padding:10px 14px;border-radius:12px;font-size:15px}
+.tt-row.tap{cursor:pointer}.tt-row.tap:hover{filter:brightness(.98)}
+.tt-row.now{box-shadow:inset 0 0 0 2px currentColor}
+.tt-t{font-size:13.5px;font-variant-numeric:tabular-nums;opacity:.85}
+.tt-x{overflow-wrap:anywhere}
+.tt-now{display:inline-block;margin-left:8px;color:var(--surface);font-size:11px;font-weight:700;border-radius:999px;padding:2px 8px;vertical-align:2px}
+.tt-row.ed{display:flex;flex-direction:column;align-items:stretch;gap:8px;background:var(--surface);color:var(--ink);box-shadow:inset 0 0 0 2px var(--accent)}
+.tt-tr{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.tt-time{width:auto;height:36px;padding:0 8px}
+.tt-tx{height:40px}
+.tt-pills{display:flex;flex-wrap:wrap;gap:6px}
+.tt-er{display:flex;align-items:center;gap:8px}
+.tt-foot{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.tt-pick{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tt-dts{display:flex;gap:6px;flex-wrap:wrap}
+.tt-dt{height:38px;min-width:54px;border-radius:10px;border:1px solid var(--line-2);background:var(--surface);font:600 13.5px var(--f-ui);color:var(--ink-2);cursor:pointer}
+.tt-dt.sel{background:var(--ink);color:var(--surface);border-color:var(--ink)}.tt-dt.fixed{opacity:.55;cursor:default}
+.tt-cats{display:flex;flex-direction:column;gap:8px}
+.tt-catr{display:flex;align-items:center;gap:8px}.tt-catr .field{flex:1;min-width:0}
+.tt-sw{width:26px;height:26px;border-radius:50%;border:3px solid var(--surface);box-shadow:0 0 0 1px var(--line-2);flex:none;cursor:pointer}
+.tt-catr .icon-btn.armed{color:var(--danger);background:var(--danger-soft)}
+@media (max-width:600px){.tt-row{grid-template-columns:1fr;gap:2px;padding:9px 13px}.tt-d{height:52px;font-size:13px}}
 .cap{outline:none;font-size:13.5px;color:var(--ink-3);padding:0 2px}
 .cap:empty::before{content:attr(data-ph);color:var(--ink-3);opacity:.7}
 .place{flex:1;display:flex;flex-wrap:wrap;align-items:center;gap:10px;background:var(--surface-2);border-radius:var(--r);padding:14px;color:var(--ink-3);font-size:14px}
@@ -1291,9 +1331,11 @@ const fmtLong=s=>parseYmd(s).toLocaleDateString('en-GB',{weekday:'long',day:'num
 const fmtShort=s=>parseYmd(s).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
 const fmtMonth=s=>parseYmd(s).toLocaleDateString('en-GB',{month:'long',year:'numeric'});
 function ago(t){const s=(Date.now()-t)/1000; if(s<60)return 'just now'; if(s<3600)return Math.floor(s/60)+' min ago'; if(s<86400)return Math.floor(s/3600)+' h ago'; const d=Math.floor(s/86400); return d===1?'yesterday':d+' days ago';}
-const APP_VER='2026.10.24-1';
+const APP_VER='2026.10.25-1';
 // Bwjspace to-dos: plain dots (no done), menu = Edit/Delete, Enter while editing adds a line below. Evvspace sets this to false.
 const TODO_SIMPLE=true;
+// Evvespace only: checkbox to-dos and the Timetable page. The Evvespace build sets this to true.
+const APP_EVV=false;
 /* tell you when a newer version is on GitHub, so every device runs the same version */
 async function checkUpdate(){ if(location.protocol!=='https:') return; try{ const t=await (await fetch('index.html',{cache:'no-store'})).text(); const m=t.match(/APP_VER='([^']+)'/); if(m&&m[1]!==APP_VER&&!checkUpdate.shown){ checkUpdate.shown=true; toast('A new version of Bwjspace is ready.',{label:'Reload',stay:true,fn:()=>location.reload()}); } }catch(e){} }
 setTimeout(checkUpdate,4000); setInterval(()=>{ if(!document.hidden) checkUpdate(); },10*60000); document.addEventListener('visibilitychange',()=>{ if(!document.hidden) checkUpdate(); });
@@ -1320,12 +1362,14 @@ const DBT={
   bookings:{title:'Studio bookings',icon:'📅',view:'calendar',cols:[{name:'Date',type:'date'},{name:'Status',type:'select',options:['Enquiry','Confirmed','Done']},{name:'Client',type:'text'},{name:'Notes',type:'text'}]},
   studio:{title:'Studio calendar',icon:'📅',view:'studio',cols:[{key:'status',name:'Status',type:'select',options:['Enquiry','Confirmed','Paid'],colors:{Enquiry:'amber',Confirmed:'blue',Paid:'teal'}},{key:'date',name:'Date',type:'date'},{key:'start',name:'Start',type:'text'},{key:'pkg',name:'Package',type:'select',options:['3 hrs','6 hrs','12 hrs','24 hrs'],colors:{'3 hrs':'teal','6 hrs':'teal','12 hrs':'teal','24 hrs':'teal'}},{key:'extra',name:'Extra hours',type:'number'},{key:'client',name:'Client',type:'text'},{key:'wa',name:'WhatsApp',type:'text'},{key:'dep',name:'Deposit paid',type:'number'}]},
   invoices:{title:'Invoices',icon:'🧾',view:'invoices',cols:[{key:'status',name:'Status',type:'select',options:['Draft','Sent','Paid'],colors:{Draft:'slate',Sent:'blue',Paid:'teal'}},{key:'date',name:'Date',type:'date'},{key:'total',name:'Amount',type:'number'}]},
+  timetable:{title:'Timetable',icon:'🗓️',view:'timetable',cols:[]},
   gear:{title:'Equipment list',icon:'🎥',view:'table',cols:[{name:'Category',type:'select',options:['Camera','Lens','Light','Audio','Grip']},{name:'Borrowed by',type:'text'},{name:'Return date',type:'date'},{name:'Available',type:'checkbox'}]}
 };
 function createDb(key,space,parent){
   const T=DBT[key]||DBT.blank;
   const p=newPage({space,parent,kind:'db',title:T.title,icon:T.icon,blocks:[]});
   p.db={view:T.view,cols:[{id:'title',name:'Name',type:'title'},...T.cols.map(c=>Object.assign({id:uid()},JSON.parse(JSON.stringify(c))))]};
+  if(T.view==='timetable') p.db.tt=ttDefault();
   return p;
 }
 function sampleSketch(){
@@ -2363,9 +2407,10 @@ function taskItem(k,refresh){
   const grip=h('button',{class:'tgrip','aria-label':'Drag to another day',title:'Drag to another day'},ic('grip',14));
   grip.addEventListener('pointerdown',e=>startTaskDrag(e,k,row,refresh));
   // a bullet (default) or a round checkbox; either way tapping it finishes the to-do
-  const cb=TODO_SIMPLE?h('span',{class:'tbul plain','aria-hidden':'true'},h('i',{})):k.style==='check'?h('input',{type:'checkbox',class:'chk',checked:!!k.done,'aria-label':'Done: '+k.text}):h('button',{class:'tbul'+(k.done?' on':''),'aria-label':(k.done?'Not done: ':'Done: ')+k.text,'aria-pressed':String(!!k.done)},h('i',{}));
+  const asCheck=APP_EVV||k.style==='check';
+  const cb=TODO_SIMPLE?h('span',{class:'tbul plain','aria-hidden':'true'},h('i',{})):asCheck?h('input',{type:'checkbox',class:'chk',checked:!!k.done,'aria-label':'Done: '+k.text}):h('button',{class:'tbul'+(k.done?' on':''),'aria-label':(k.done?'Not done: ':'Done: ')+k.text,'aria-pressed':String(!!k.done)},h('i',{}));
   const flip=v=>{ if(v){ setDone(k,true); finishFade(k,row,refresh); } else { setDone(k,false); refresh(); } };
-  if(TODO_SIMPLE){} else if(k.style==='check') cb.addEventListener('change',()=>flip(cb.checked)); else cb.addEventListener('click',()=>flip(!k.done));
+  if(TODO_SIMPLE){} else if(asCheck) cb.addEventListener('change',()=>flip(cb.checked)); else cb.addEventListener('click',()=>flip(!k.done));
   const subs=k.subs||[], sd=subs.filter(s=>s.done).length, open=k.open!==false&&!k.done;
   const r=k.recurId&&recurs().find(x=>x.id===k.recurId);
   const meta=[
@@ -2399,7 +2444,7 @@ function taskItem(k,refresh){
 }
 function editTask(k,row,refresh){
   const inp=h('input',{class:'tinput',value:k.text,'aria-label':'Edit to-do'});
-  row.querySelector('.ttx').replaceWith(inp); inp.focus(); inp.select();
+  row.querySelector('.ttx').replaceWith(inp); inp.focus(); if(TODO_SIMPLE){ const n=inp.value.length; inp.setSelectionRange(n,n); } else inp.select();
   let fin=false;
   const end=commit=>{ if(fin) return; fin=true; const v=inp.value.trim(); if(commit&&!v){ removeTask(k,refresh); return; } if(commit&&v!==k.text){ const pt=parseTime(v); k.text=pt.text; if(pt.time){ k.time=pt.time; placeByTime(k); } syncRule(k); } save(); refresh(); };
   inp.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.isComposing){ e.preventDefault(); if(TODO_SIMPLE&&inp.value.trim()){ addingDay=k.date||'someday'; addingAfter=k.id; } end(true); focusAdd(); } if(e.key==='Escape'){ e.preventDefault(); end(false); } });
@@ -2442,7 +2487,7 @@ function taskMenu(anchor,k,refresh){
     {node:h('div',{class:'pfield'},h('label',{for:'tm-time'},'Time'),h('div',{style:{display:'flex',gap:'6px'}},Object.assign(ti,{id:'tm-time'}),k.time?h('button',{class:'btn sm',onclick:()=>{ k.time=null; syncRule(k); save(); closePop(); refresh(); }},'Clear'):null))},
     {label:r?ruleLabel(r):'Repeat…',icon:'refresh',fn:()=>repeatModal(k,refresh)},
     {label:'Add steps',icon:'list',fn:()=>{ k.open=true; addingStep=k.id; refresh(); }},
-    {label:k.style==='check'?'Show as bullet •':'Show as checkbox',icon:'check',fn:()=>{ k.style=k.style==='check'?null:'check'; save(); refresh(); }},
+    APP_EVV?null:{label:k.style==='check'?'Show as bullet •':'Show as checkbox',icon:'check',fn:()=>{ k.style=k.style==='check'?null:'check'; save(); refresh(); }},
     '-',
     {label:'Edit',icon:'pen',fn:()=>{ const row=document.querySelector(`[data-task="${k.id}"]`); if(row) editTask(k,row,refresh); }},
     {label:k.recurId?'Delete this one':'Delete',icon:'trash',danger:true,fn:()=>removeTask(k,refresh)}
@@ -2600,9 +2645,38 @@ function rangePicker(anchor,refresh){
   draw();
   popover(anchor,[{node:box}],'rp-pop');
 }
+/* Bwjspace greeting: mostly Baeny, sometimes a nickname; special lines on holidays. Same line all day. */
+const BAE_NAMES=['Baegel','Gelgel','Cute Gelgel','Silly Little Gel','Gelby','My Dudu','Baenyboony'];
+const LUNAR={cny:['2026-02-17','2027-02-06','2028-01-26','2029-02-13','2030-02-03','2031-01-23','2032-02-11','2033-01-31','2034-02-19','2035-02-08','2036-01-28','2037-02-15','2038-02-04','2039-01-24','2040-02-12'],
+  qixi:['2026-08-19','2027-08-08','2028-08-26','2029-08-16','2030-08-05','2031-08-24','2032-08-12','2033-08-01','2034-08-20','2035-08-10','2036-08-28','2037-08-17','2038-08-07','2039-08-26','2040-08-14'],
+  moon:['2026-09-25','2027-09-15','2028-10-03','2029-09-22','2030-09-12','2031-10-01','2032-09-19','2033-09-08','2034-09-27','2035-09-16','2036-10-04','2037-09-24','2038-09-13','2039-10-02','2040-09-20']};
+function dayHash(str){ let x=0; for(const c of str) x=(x*31+c.charCodeAt(0))>>>0; x^=x>>>13; x=Math.imul(x,0x5bd1e995)>>>0; return (x^(x>>>15))>>>0; }
+function baenyHello(now){
+  const ymd=ymd0(now), md=ymd.slice(5), hs=dayHash(ymd);
+  const any=()=>(['Baeny',...BAE_NAMES])[hs%8];
+  const my=n=>n.startsWith('My ')?n:'my '+n;
+  const pick=(L)=>L[(hs>>>4)%L.length];
+  const n0=any();
+  if(md==='06-05') return 'Hehe u got forget ma? My little Baeny';
+  if(LUNAR.qixi.includes(ymd)) return (hs>>>4)%2?`七夕快乐，我的 ${n0.replace(/^My /,'')}`:`${n0}，今天七夕，记得 hughug 我 weeee`;
+  if(LUNAR.cny.includes(ymd)) return `Gong Xi Fa Caiiii, ${n0}`;
+  if(LUNAR.moon.includes(ymd)) return `Happy Mooncake Day, ${n0}`;
+  const H={'01-01':`Happy New Yearrrr, ${n0}`,'02-14':`Happy Valentine's, ${my(n0)}`,'03-03':`Happy Anniversary, ${my(n0)}`,'07-14':`Happy Birthdayyyy, ${n0}`,
+    '12-24':`It's Chrissimass Eveee, ${n0}`,'12-25':`Merry Chrissimassss, ${n0}`,'12-31':`Last day of the year, ${n0}`};
+  if(H[md]) return H[md];
+  // normal days: about 6 days in 10 are Baeny, the rest a nickname
+  const n=hs%10<6?'Baeny':BAE_NAMES[(hs>>>8)%BAE_NAMES.length];
+  const hr=now.getHours();
+  if(hr<5) return pick([`Still up, ${n}?`,`Late night, ${n}`]);
+  if(hr<12) return pick([`Good morning, ${n}`,`Rise and shine, ${n}`,`Morning morning, ${n}`]);
+  if(hr<18) return pick([`Good afternoon, ${n}`,`Hello hello, ${n}`]);
+  return pick([`Good evening, ${n}`,`Evening, ${n}`]);
+}
+function ymd0(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function viewHome(){
   rollover();
   const hr=new Date().getHours(); const greet=hr<12?'Good morning':hr<18?'Good afternoon':'Good evening';
+  const hello=APP_EVV?`${greet}, ${S.settings.name||'there'}`:baenyHello(new Date());
   const t=todayStr(), ws=weekStart(t), exp=!!S.ui.nextWeek;
   const refresh=keepScroll(renderView);
   const from=homeRange?homeRange.from:ws, to=homeRange?homeRange.to:addDays(ws,exp?13:6);
@@ -2617,8 +2691,8 @@ function viewHome(){
   const pickBtn=h('button',{class:'btn sm','aria-label':'Pick a date range',onclick:e=>rangePicker(e.currentTarget,refresh)},ic('calendar',14),homeRange?'Change dates':'Pick dates');
   return h('div',{class:'doc lwide'},
     h('p',{class:'dateline'},new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'})),
-    h('h1',{class:'hello'},`${greet}, ${S.settings.name||'there'}`),
-    dow>=5&&!homeRange?h('div',{class:'nudge'},ic('check',16),h('span',{},dow===6?"It's Sunday. A good time to look back at this week and plan the next one.":"The weekend is a good time to look back at this week."),h('button',{class:'btn sm pri',onclick:()=>go('review')},'Weekly review')):null,
+    h('h1',{class:'hello'},hello),
+    // (the weekend Weekly review reminder was removed; Weekly review is still in the sidebar)
     h('div',{class:'wk-h'},
       h('h2',{},homeRange?'Your dates':'This week'),h('span',{class:'wk-r'},fmtRange(shownFrom,shownTo)),
       !homeRange&&dow>0?h('button',{class:'pp-edit wk-past',onclick:()=>{ S.ui.showPast=!showPast; save(); refresh(); }},showPast?'Hide past days':'Show past days'):null,
@@ -3581,6 +3655,7 @@ function valueView(col,v){
 function mountDb(p){ const holder=h('div',{}); let busy=false; const draw=()=>{ if(busy) return; busy=true; try{ holder.replaceChildren(dbInner(p,draw)); } finally{ busy=false; } }; draw(); return holder; }
 function dbInner(db,draw){
   const V=[['table','Table','table'],['board','Board','board'],['calendar','Calendar','calendar'],['gallery','Gallery','gallery']];
+  if(db.db.view==='timetable') return timetableView(db,draw);
   if(db.db.view==='studio') return studioView(db,draw);
   if(db.db.view==='invoices') return invoicesView(db,draw);
   if(SHARED&&db.db.view==='content') return contentView(db,draw);
@@ -3807,6 +3882,165 @@ const SV={};
 function svState(db){ const st=CB[db.id]||(CB[db.id]={mode:'board',plat:null}); if(!st.wk){ const d=new Date(); d.setDate(d.getDate()-((d.getDay()+6)%7)); st.wk=ymd(d); st.sm=st.sm||'week'; } return st; }
 function newBooking(db,draw,date,start){ const K=sKeys(db); const P={}; if(K.status) P[K.status.id]='Enquiry'; if(K.date) P[K.date.id]=date||todayStr(); if(K.start) P[K.start.id]=start||'10:00'; if(K.pkg) P[K.pkg.id]='3 hrs'; if(K.extra) P[K.extra.id]=0;
   const r=newRow(db,P); openPost(db,r,draw,true); }
+/* ===== Timetable (Evvespace): a weekly plan by day, with changes for single dates ===== */
+const TT_COLORS=['violet','coral','rose','teal','slate','amber','blue','green','sky','pink','orange','purple'];
+const TT_DAYN=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+function ttDefault(){
+  const S_=(s,e,t,c)=>({id:uid(),s,e,t,c});
+  const tail=()=>[S_('20:30','21:30','Dinner','life'),S_('21:30','22:00','Get ready to go live','life'),S_('22:00','03:00','Live: making tumblers','live'),S_('03:00','05:00','Wrap up, relax, sleep','life')];
+  const mon=()=>[S_('13:00','14:00','Wake up & eat','life'),S_('14:00','14:45','Korean','study'),S_('14:45','15:00','Short break','free'),S_('15:00','17:30','Test new solutions (free time if nothing to test)','work'),S_('17:30','18:00','Shower','life'),S_('18:00','19:00','Log stock and orders','work'),S_('19:00','20:30','Free time','free'),...tail()];
+  const drop=(lang,study)=>[S_('13:00','13:30','Wake up','life'),S_('13:30','14:00','Drop off (listen to '+lang+' on the way)','work'),S_('14:00','14:45','Eat','life'),S_('14:45','15:15',study,'study'),S_('15:15','16:30','Free time (backup for re-testing)','free'),S_('16:30','17:00','Shower','life'),S_('17:00','20:30','Free time','free'),...tail()];
+  return {
+    cats:[{id:'study',name:'Study',color:'violet'},{id:'work',name:'Work',color:'coral'},{id:'live',name:'Live',color:'rose'},{id:'free',name:'Free / date',color:'teal'},{id:'life',name:'Life',color:'slate'}],
+    days:[
+      {note:'',slots:mon()},
+      {note:'No live · Recharge day',slots:[S_('13:00','14:00','Wake up & eat','life'),S_('14:00','18:00','Pack orders (listen to Thai / Korean)','work'),S_('18:00','18:30','Shower','life'),S_('18:30','20:30','Free time','free'),S_('20:30','21:30','Dinner','life'),S_('21:30','','Fully relax, try to sleep early','free')]},
+      {note:'',slots:drop('Thai','Thai revision')},
+      {note:'',slots:mon()},
+      {note:'',slots:[S_('13:00','14:00','Wake up & eat','life'),S_('14:00','16:30','Backup: re-testing / catch-up orders','work'),S_('16:30','18:30','Free time','free'),S_('18:30','19:00','Shower','life'),S_('19:00','20:00','Early dinner','life'),S_('20:30','22:00','Thai class','study'),S_('22:00','03:00','Live: making tumblers','live'),S_('03:00','05:00','Wrap up, relax, sleep','life')]},
+      {note:'No live',slots:[S_('13:00','14:00','Wake up & eat','life'),S_('14:00','16:30','Pack orders (listen to Korean)','work'),S_('16:30','17:00','Shower','life'),S_('17:00','','Date, no need to rush back','free')]},
+      {note:'',slots:drop('Korean','Korean (casual, rest if not in the mood)')}
+    ],
+    rest:{note:'Rest day',slots:[S_('13:00','14:00','Wake up & eat','life'),S_('14:00','20:30','Rest, no work','free'),S_('20:30','21:30','Dinner','life'),S_('21:30','','Relax, sleep early','free')]},
+    dates:{}
+  };
+}
+// the planner day starts at 5am, so 1am still belongs to the day before (after the live)
+function ttToday(){ return ymd0(new Date(Date.now()-5*3600e3)); }
+function ttMin(v){ if(!v) return null; const [a,b]=v.split(':').map(Number); return a*60+b; }
+function ttKey(v){ const m=ttMin(v); return m<300?m+1440:m; }
+function ttFmt(v,ap){ const m=ttMin(v), hh=Math.floor(m/60), mm=m%60; return ((hh%12)||12)+':'+String(mm).padStart(2,'0')+(ap?(hh<12?' am':' pm'):''); }
+function ttRange(s){ if(!s.e) return ttFmt(s.s,true)+' onwards'; const same=(ttMin(s.s)<720)===(ttMin(s.e)<720)&&ttKey(s.e)>ttKey(s.s)&&ttKey(s.e)-ttKey(s.s)<720; return (same?ttFmt(s.s,false):ttFmt(s.s,true))+' – '+ttFmt(s.e,true); }
+function ttSort(L){ L.sort((a,b)=>ttKey(a.s)-ttKey(b.s)); return L; }
+function ttPlan(tt,d){
+  if(d==='rest') return {kind:'restplan',src:tt.rest};
+  const o=tt.dates[d], dow=monIdx(d);
+  if(o&&o.mode==='own') return {kind:'own',src:o};
+  if(o&&o.mode==='rest') return {kind:'rest',src:tt.rest};
+  if(o&&o.mode==='use') return {kind:'use',src:tt.days[o.from],from:o.from};
+  return {kind:'week',src:tt.days[dow],dow};
+}
+const TT={page:null,date:null,edit:null,redraw:null};
+document.addEventListener('pointerdown',e=>{ if(TT.edit&&TT.redraw&&!e.target.closest('.tt-row.ed,.pop,.modal-back')){ TT.edit=null; TT.redraw(); } },true);
+function ttConfirm(title,text,okLabel,fn,danger){
+  const body=modal(title,[h('p',{class:'muted',style:{margin:'0 0 16px',lineHeight:'1.5'}},text),
+    h('div',{class:'row',style:{justifyContent:'flex-end',gap:'8px'}},h('button',{class:'btn',onclick:closeModal},'Cancel'),h('button',{class:'btn pri'+(danger?' danger':''),onclick:()=>{ closeModal(); fn(); }},okLabel))]);
+  return body;
+}
+function timetableView(db,draw){
+  if(!db.db.tt){ db.db.tt=ttDefault(); touch(db); }
+  const tt=db.db.tt, ro=!!SHARED;
+  if(TT.page!==db.id){ TT.page=db.id; TT.date=null; TT.edit=null; }
+  const today=ttToday(); if(!TT.date) TT.date=today;
+  TT.redraw=draw;
+  const changed=()=>touch(db);
+  const cat=id=>tt.cats.find(c=>c.id===id)||tt.cats[tt.cats.length-1]||{name:'',color:'slate'};
+  const rest=TT.date==='rest', d=rest?null:TT.date;
+  const plan=ttPlan(tt,TT.date), src=plan.src;
+  const editable=!ro&&(plan.kind==='week'||plan.kind==='own'||plan.kind==='restplan');
+  const out=h('div',{class:'tt'});
+  // week strip with dates
+  if(!rest){
+    const ws=weekStart(d), we=addDays(ws,6), tws=weekStart(today);
+    const lbl=ws===tws?'This week':ws===addDays(tws,7)?'Next week':ws===addDays(tws,-7)?'Last week':'Week of';
+    const go7=n=>{ TT.date=addDays(d,n); TT.edit=null; draw(); };
+    out.append(h('div',{class:'tt-wk'},
+      h('button',{class:'icon-btn','aria-label':'Previous week',onclick:()=>go7(-7)},ic('chevl',18)),
+      h('span',{},lbl+' · '+fmtRange(ws,we)),
+      h('button',{class:'icon-btn','aria-label':'Next week',onclick:()=>go7(7)},ic('chevr',18)),
+      ws!==tws?h('button',{class:'btn sm',onclick:()=>{ TT.date=today; TT.edit=null; draw(); }},'Today'):null));
+    out.append(h('div',{class:'tt-days'},[0,1,2,3,4,5,6].map(i=>{ const x=addDays(ws,i), dt=parseYmd(x);
+      return h('button',{class:'tt-d'+(x===d?' on':'')+(x===today?' today':'')+(tt.dates[x]?' chg':''),'aria-pressed':String(x===d),'aria-label':fmtLong(x)+(tt.dates[x]?', changed for this date':''),onclick:()=>{ TT.date=x; TT.edit=null; draw(); }},
+        h('span',{},['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][i]),h('small',{},dt.getDate())); })));
+  } else {
+    out.append(h('div',{class:'tt-wk'},h('button',{class:'btn sm',onclick:()=>{ TT.date=null; TT.edit=null; draw(); }},ic('chevl',14),'Back to timetable')));
+  }
+  // day line: name, what kind of day, and the menu
+  const back=()=>ttConfirm('Back to normal?',fmtLong(d)+' will go back to your usual '+TT_DAYN[monIdx(d)]+' plan. Anything you changed just for this date will be removed.','Back to normal',()=>{ delete tt.dates[d]; TT.edit=null; changed(); draw(); toast('Back to normal'); });
+  const dayMenu=e=>popover(e.currentTarget,[
+    {title:'Just for '+parseYmd(d).toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'})},
+    {label:'Rest day',icon:'moon',fn:()=>{ tt.dates[d]={mode:'rest'}; TT.edit=null; changed(); draw(); }},
+    {label:'Use another day’s plan…',icon:'refresh',fn:()=>usePick()},
+    {label:'Edit just this date',icon:'pen',fn:()=>{ const s0=ttPlan(tt,d).src; tt.dates[d]={mode:'own',note:s0.note||'',slots:s0.slots.map(x=>Object.assign({},x,{id:uid()}))}; TT.edit=null; changed(); draw(); toast('Changes now only affect this date'); }},
+    tt.dates[d]?'-':null,
+    tt.dates[d]?{label:'Back to normal',icon:'undo',fn:back}:null,
+    '-',
+    {label:'Edit the rest-day plan',icon:'list',fn:()=>{ TT.date='rest'; TT.edit=null; draw(); }}]);
+  const usePick=()=>{ const cur=monIdx(d); modal('Use another day’s plan',[h('p',{class:'muted',style:{margin:'0 0 12px'}},'Just for '+fmtLong(d)+'. Your weekly plan stays the same.'),
+    h('div',{class:'tt-pick'},TT_DAYN.map((n,i)=>i===cur?null:h('button',{class:'btn',onclick:()=>{ closeModal(); tt.dates[d]={mode:'use',from:i}; TT.edit=null; changed(); draw(); }},n)))]); };
+  const kindTxt=plan.kind==='rest'?'Rest day · just this date':plan.kind==='use'?'Following '+TT_DAYN[plan.from]+'’s plan · just this date':plan.kind==='own'?'Changed just for this date':'';
+  out.append(h('div',{class:'tt-dl'},
+    h('b',{},rest?'Rest-day plan':parseYmd(d).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'short'})),
+    kindTxt?h('span',{class:'tt-kind'},kindTxt):null,
+    h('span',{style:{flex:1}}),
+    !ro&&!rest?h('button',{class:'icon-btn','aria-label':'Options for this date',onclick:dayMenu},ic('more',18)):null));
+  if(rest) out.append(h('p',{class:'muted tt-hint'},'Used on any date you set as a rest day (⋯ beside the date → Rest day). Tap a row to change it.'));
+  // note
+  if(editable){
+    const note=h('button',{class:'tt-note'+(src.note?'':' empty'),onclick:()=>{ const i=h('input',{class:'field',value:src.note||'',placeholder:'A short note, e.g. No live','aria-label':'Note for this day'}); note.replaceWith(i); i.focus(); const n=i.value.length; i.setSelectionRange(n,n); let f=false; const end=()=>{ if(f) return; f=true; src.note=i.value.trim(); changed(); draw(); }; i.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.isComposing){ e.preventDefault(); end(); } }); i.addEventListener('blur',end); }},src.note||'+ Add a note');
+    out.append(note);
+  } else if(src.note) out.append(h('div',{class:'tt-note ro'},src.note));
+  if(plan.kind==='rest'||plan.kind==='use') out.append(h('div',{class:'tt-banner'},h('span',{},plan.kind==='rest'?'This date uses your rest-day plan.':'This date uses '+TT_DAYN[plan.from]+'’s plan.'),!ro?h('button',{class:'btn sm',onclick:back},'Back to normal'):null));
+  // legend
+  out.append(h('div',{class:'tt-leg'},tt.cats.map(c=>h('span',{class:'tt-chip',style:{background:`var(--s-${c.color})`,color:`var(--c-${c.color})`}},c.name)),!ro?h('button',{class:'pp-edit',onclick:()=>catEditor()},'Edit'):null));
+  // rows
+  const isNowDay=!rest&&d===today, nowM=(()=>{ const n=new Date(), m=n.getHours()*60+n.getMinutes(); return m<300?m+1440:m; })();
+  const L=src.slots;
+  const list=h('div',{class:'tt-list'});
+  L.forEach((s,idx)=>{
+    const c=cat(s.c);
+    const ke=s.e?(ttKey(s.e)<=ttKey(s.s)?ttKey(s.e)+1440:ttKey(s.e)):1740;
+    const now=isNowDay&&nowM>=ttKey(s.s)&&nowM<ke;
+    if(TT.edit===s.id&&editable){ list.append(editRow(s)); return; }
+    list.append(h('div',{class:'tt-row'+(now?' now':'')+(editable?' tap':''),style:{background:`var(--s-${c.color})`,color:`var(--c-${c.color})`},role:editable?'button':null,tabindex:editable?'0':null,
+      onclick:editable?()=>{ TT.edit=s.id; draw(); const i=document.querySelector('.tt-row.ed .tt-tx'); if(i){ i.focus(); const n=i.value.length; i.setSelectionRange(n,n); } }:null},
+      h('span',{class:'tt-t'},ttRange(s)),h('span',{class:'tt-x'},s.t||h('i',{class:'muted'},'Untitled'),now?h('span',{class:'tt-now',style:{background:`var(--c-${c.color})`}},'Now'):null)));
+  });
+  if(!L.length) list.append(h('p',{class:'muted'},editable?'Nothing planned yet. Add a time slot below.':'Nothing planned.'));
+  out.append(list);
+  function editRow(s){
+    const row=h('div',{class:'tt-row ed'});
+    const ti=(v,lab,fn)=>{ const i=h('input',{type:'time',class:'field tt-time',value:v||'','aria-label':lab}); i.addEventListener('change',()=>fn(i.value)); return i; };
+    const tx=h('input',{class:'field tt-tx',value:s.t,placeholder:'What are you doing?','aria-label':'What'});
+    tx.addEventListener('input',()=>{ s.t=tx.value; changed(); });
+    tx.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.isComposing){ e.preventDefault(); TT.edit=null; ttSort(L); changed(); draw(); } });
+    const pills=h('div',{class:'tt-pills'},tt.cats.map(c=>h('button',{class:'tt-chip'+(c.id===s.c?' sel':''),style:{background:`var(--s-${c.color})`,color:`var(--c-${c.color})`},onclick:()=>{ s.c=c.id; changed(); draw(); }},c.name)));
+    const more=h('button',{class:'pp-edit',onclick:e=>popover(e.currentTarget,[
+      plan.kind==='week'?{label:'Also on other days…',icon:'copy',fn:()=>alsoOn(s)}:null,
+      {label:'Delete',icon:'trash',danger:true,fn:()=>{ const i=L.indexOf(s); if(i<0) return; L.splice(i,1); TT.edit=null; changed(); draw(); toast('Time slot deleted',{label:'Undo',fn:()=>{ L.splice(i,0,s); changed(); draw(); }}); }}])},'⋯ More');
+    row.append(
+      h('div',{class:'tt-tr'},ti(s.s,'Start',v=>{ if(v){ s.s=v; changed(); } }),h('span',{},'–'),ti(s.e,'End (leave empty for “onwards”)',v=>{ s.e=v||''; changed(); }),h('span',{class:'tt-on muted'},s.e?'':'onwards')),
+      tx,pills,h('div',{class:'tt-er'},more,h('span',{style:{flex:1}}),h('button',{class:'btn sm pri',onclick:()=>{ TT.edit=null; ttSort(L); changed(); draw(); }},'Done')));
+    return row;
+  }
+  function alsoOn(s){
+    const cur=plan.dow, on=new Set();
+    const btns=TT_DAYN.map((n,i)=>{ const b=h('button',{class:'tt-dt'+(i===cur?' sel fixed':''),disabled:i===cur?true:null,'aria-pressed':String(i===cur),onclick:()=>{ on.has(i)?on.delete(i):on.add(i); b.classList.toggle('sel',on.has(i)); b.setAttribute('aria-pressed',String(on.has(i))); }},n.slice(0,3)); return b; });
+    modal('Also on other days',[h('p',{class:'muted',style:{margin:'0 0 12px'}},'Adds “'+(s.t||'this time slot')+'” ('+ttRange(s)+') to the days you pick.'),h('div',{class:'tt-dts'},btns),
+      h('div',{class:'row',style:{justifyContent:'flex-end',marginTop:'16px',gap:'8px'}},h('button',{class:'btn',onclick:closeModal},'Cancel'),h('button',{class:'btn pri',onclick:()=>{ on.forEach(i=>{ tt.days[i].slots.push(Object.assign({},s,{id:uid()})); ttSort(tt.days[i].slots); }); closeModal(); changed(); draw(); if(on.size) toast('Added to '+on.size+' more day'+(on.size>1?'s':'')); }},'Add'))]);
+  }
+  function copyDay(){
+    const cur=plan.dow, on=new Set();
+    const btns=TT_DAYN.map((n,i)=>{ const b=h('button',{class:'tt-dt'+(i===cur?' sel fixed':''),disabled:i===cur?true:null,onclick:()=>{ on.has(i)?on.delete(i):on.add(i); b.classList.toggle('sel',on.has(i)); }},n.slice(0,3)); return b; });
+    modal('Copy '+TT_DAYN[cur],[h('p',{class:'muted',style:{margin:'0 0 12px'}},'The days you pick will get the same plan as '+TT_DAYN[cur]+'. Their own plan is replaced.'),h('div',{class:'tt-dts'},btns),
+      h('div',{class:'row',style:{justifyContent:'flex-end',marginTop:'16px',gap:'8px'}},h('button',{class:'btn',onclick:closeModal},'Cancel'),h('button',{class:'btn pri',onclick:()=>{ if(!on.size){ closeModal(); return; } const old={}; on.forEach(i=>{ old[i]=tt.days[i]; tt.days[i]={note:src.note||'',slots:src.slots.map(x=>Object.assign({},x,{id:uid()}))}; }); closeModal(); changed(); draw(); toast('Copied to '+on.size+' day'+(on.size>1?'s':''),{label:'Undo',fn:()=>{ Object.keys(old).forEach(i=>tt.days[i]=old[i]); changed(); draw(); }}); }},'Copy'))]);
+  }
+  function catEditor(){
+    const body=h('div',{class:'tt-cats'});
+    const paint=()=>{ body.replaceChildren(...tt.cats.map((c,i)=>{
+      const used=Object.values(tt.dates).concat(tt.days,[tt.rest]).reduce((n,x)=>n+((x&&x.slots)||[]).filter(s=>s.c===c.id).length,0);
+      const name=h('input',{class:'field',value:c.name,'aria-label':'Name'}); name.addEventListener('input',()=>{ c.name=name.value; changed(); draw(); });
+      const sw=h('button',{class:'tt-sw',style:{background:`var(--c-${c.color})`},'aria-label':'Change colour',onclick:e=>popover(e.currentTarget,TT_COLORS.map(k=>({label:k[0].toUpperCase()+k.slice(1),dot:k,on:k===c.color,fn:()=>{ c.color=k; changed(); draw(); paint(); }})))});
+      let armed=false; const del=h('button',{class:'icon-btn','aria-label':'Delete '+c.name,onclick:()=>{ if(tt.cats.length<2) return; if(!armed){ armed=true; del.classList.add('armed'); del.title='Tap again to delete'; toast(used?'Tap again to delete. Its '+used+' time slot'+(used>1?'s':'')+' will become “'+tt.cats[i?0:1].name+'”.':'Tap again to delete'); return; } const to=tt.cats[i?0:1].id; [...tt.days,tt.rest,...Object.values(tt.dates)].forEach(x=>((x&&x.slots)||[]).forEach(s=>{ if(s.c===c.id) s.c=to; })); tt.cats.splice(i,1); changed(); draw(); paint(); }},ic('trash',15));
+      return h('div',{class:'tt-catr'},sw,name,h('small',{class:'muted'},used+' slot'+(used===1?'':'s')),del); }),
+      h('button',{class:'btn sm',onclick:()=>{ const used=new Set(tt.cats.map(c=>c.color)); tt.cats.push({id:uid(),name:'New type',color:TT_COLORS.find(k=>!used.has(k))||'blue'}); changed(); draw(); paint(); }},ic('plus',14),'Add a type')); };
+    paint(); modal('Edit types',[body,h('div',{class:'row',style:{justifyContent:'flex-end',marginTop:'14px'}},h('button',{class:'btn pri',onclick:closeModal},'Done'))]);
+  }
+  if(editable) out.append(h('div',{class:'tt-foot'},
+    h('button',{class:'btn',onclick:()=>{ const last=L[L.length-1]; let st=last?(last.e||'12:00'):'12:00'; if(last&&ttKey(st)<ttKey(last.s)) st='12:00'; const m=(ttMin(st)+60)%1440; const s={id:uid(),s:st,e:String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0'),t:'',c:(tt.cats.find(c=>c.id==='life')||tt.cats[0]).id}; L.push(s); TT.edit=s.id; changed(); draw(); const i=document.querySelector('.tt-row.ed .tt-tx'); if(i) i.focus(); }},ic('plus',14),'Add time slot'),
+    plan.kind==='week'?h('button',{class:'btn',onclick:copyDay},'Copy '+TT_DAYN[plan.dow]+' to other days…'):null));
+  return out;
+}
 function studioView(db,draw){
   const st=svState(db), K=sKeys(db), ro=SHARED&&SHARED.perm!=='edit', phone=isPhone();
   const rs=rows(db).filter(r=>K.date&&r.props[K.date.id]);
@@ -4353,6 +4587,7 @@ const TPL=[
   {k:'db:studio',n:'Studio calendar',d:'Bookings by week or month, with packages, client WhatsApp and notes',i:'calendar'},
   {k:'db:invoices',n:'Invoices',d:'Studio rental invoices in your template, saved as PDF',i:'receipt'}
 ];
+if(APP_EVV) TPL.push({k:'db:timetable',n:'Timetable',d:'Your day by the hour, Monday to Sunday, with rest days and one-off changes',i:'calendar'});
 function fromTemplate(k,sp,parent){
   if(k.indexOf('db:')===0) return createDb(k.slice(3),sp,parent);
   const B={
