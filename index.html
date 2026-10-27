@@ -568,6 +568,7 @@ button.tchip:hover{filter:brightness(.97)}
 .ptool{margin-top:auto;color:var(--ink-3);font-size:12.5px;padding-top:4px}
 .pnew{border:1.5px dashed var(--line-2);border-radius:14px;display:flex;align-items:center;justify-content:center;gap:6px;min-height:200px;color:var(--ink-3);font-weight:500}
 .pnew:hover{color:var(--ink-2);border-color:var(--ink-3)}
+@media (max-width:600px){.pnew{min-height:64px}}
 textarea.cell.area{resize:none;padding:8px 10px;line-height:1.5;min-height:36px;height:auto;font:inherit;overflow:hidden}
 
 /* prompt pop-up */
@@ -1340,7 +1341,7 @@ const fmtLong=s=>parseYmd(s).toLocaleDateString('en-GB',{weekday:'long',day:'num
 const fmtShort=s=>parseYmd(s).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
 const fmtMonth=s=>parseYmd(s).toLocaleDateString('en-GB',{month:'long',year:'numeric'});
 function ago(t){const s=(Date.now()-t)/1000; if(s<60)return 'just now'; if(s<3600)return Math.floor(s/60)+' min ago'; if(s<86400)return Math.floor(s/3600)+' h ago'; const d=Math.floor(s/86400); return d===1?'yesterday':d+' days ago';}
-const APP_VER='2026.10.27-2';
+const APP_VER='2026.10.27-3';
 // Bwjspace to-dos: plain dots (no done), menu = Edit/Delete, Enter while editing adds a line below. Evvspace sets this to false.
 const TODO_SIMPLE=true;
 // Evvespace only: checkbox to-dos and the Timetable page. The Evvespace build sets this to true.
@@ -4420,7 +4421,9 @@ function galView(db,cols,rs,draw){
         txt?h('p',{class:'ptext'},txt):h('p',{class:'ptext empty'},'No prompt yet. Click the name to add one.'),
         tv?h('small',{class:'ptool'},'Tool: '+tv):null));
     cards.push({el:card,t:titleOf(r).toLowerCase(),c:cv||'',r}); return card;
-  }),h('button',{class:'pnew',onclick:()=>promptModal(db,null,draw)},ic('plus',18),'New prompt'));
+  }));
+  // the add box comes first, so you don't scroll past every prompt to add one
+  grid.prepend(h('button',{class:'pnew',onclick:()=>promptModal(db,null,draw)},ic('plus',18),'New prompt'));
   // search by name (capital letters don't matter) and filter by category; filtering happens in place so typing isn't interrupted
   const st=GAL[db.id]||(GAL[db.id]={q:'',c:null});
   // Select mode: tick several cards and move them to the trash in one go (you, and people with an Edit link)
