@@ -1331,7 +1331,7 @@ const fmtLong=s=>parseYmd(s).toLocaleDateString('en-GB',{weekday:'long',day:'num
 const fmtShort=s=>parseYmd(s).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
 const fmtMonth=s=>parseYmd(s).toLocaleDateString('en-GB',{month:'long',year:'numeric'});
 function ago(t){const s=(Date.now()-t)/1000; if(s<60)return 'just now'; if(s<3600)return Math.floor(s/60)+' min ago'; if(s<86400)return Math.floor(s/3600)+' h ago'; const d=Math.floor(s/86400); return d===1?'yesterday':d+' days ago';}
-const APP_VER='2026.10.25-1';
+const APP_VER='2026.10.27-1';
 // Bwjspace to-dos: plain dots (no done), menu = Edit/Delete, Enter while editing adds a line below. Evvspace sets this to false.
 const TODO_SIMPLE=true;
 // Evvespace only: checkbox to-dos and the Timetable page. The Evvespace build sets this to true.
@@ -2078,7 +2078,8 @@ async function sharedPull(first){
       const r=merge3(SHARED.baseData[pid]||{blocks:[]},S.pages[pid],it.data); replaceIn(S.pages[pid],r.page); dups+=r.conflicts; merged=true;
     } else { if(S.pages[pid]) replaceIn(S.pages[pid],it.data); else S.pages[pid]=it.data; SHARED.hash[pid]=JSON.stringify(S.pages[pid]); }
     SHARED.base[pid]=it.updated; SHARED.baseData[pid]=cl(it.data); changed=true; if(onPage(pid)) cur=true; });
-  Object.keys(S.pages).forEach(pid=>{ if(!seen.has(pid)){ delete S.pages[pid]; changed=true; } });
+  // keep cards you just added that are not saved yet; anything else the link no longer reaches goes away
+  Object.keys(S.pages).forEach(pid=>{ if(!seen.has(pid)&&!(SHARED.dirty.has(pid)&&!SHARED.base[pid])){ delete S.pages[pid]; changed=true; } });
   SHARED.space=res.space||null;
   const firstId=S.pages[res.root]?res.root:sharedOrder()[0];
   if(!firstId){ sharedMessage('This page isn’t available','It may have been moved to the trash, or nothing is shared yet.'); return; }
@@ -3659,7 +3660,8 @@ function dbInner(db,draw){
   if(db.db.view==='studio') return studioView(db,draw);
   if(db.db.view==='invoices') return invoicesView(db,draw);
   if(SHARED&&db.db.view==='content') return contentView(db,draw);
-  if(SHARED){ const cols=db.db.cols, rs=rows(db); const gal=db.db.view==='gallery'||cols.some(c=>/prompt/i.test(c.name)); return h('div',{},gal?galView(db,cols,rs,draw):tableView(db,cols,rs,draw)); }
+  // Edit links get the full database (add, change and delete cards/rows); view and comment links get a read-only list
+  if(SHARED&&SHARED.perm!=='edit'){ const cols=db.db.cols, rs=rows(db); const gal=db.db.view==='gallery'||cols.some(c=>/prompt/i.test(c.name)); return h('div',{},gal?galView(db,cols,rs,draw):tableView(db,cols,rs,draw)); }
   const bar=h('div',{class:'dbbar'},
     h('span',{class:'sp'}),
     h('button',{class:'btn sm',onclick:()=>propEditor(db,draw)},ic('props',15),'Properties'),
@@ -3693,7 +3695,7 @@ function contentView(db,draw){
     plat?h('div',{class:'cb-plats'},[null,...(plat.options||[])].map(o=>{ const on=st.plat===o, c=o?optColor(plat,o):null;
       return h('button',{class:'pm-chip'+(on?' on':''),'aria-pressed':String(on),style:on?(o?{background:`var(--s-${c})`,color:`var(--c-${c})`,borderColor:`var(--c-${c})`}:{background:'var(--ink)',color:'var(--bg)',borderColor:'var(--ink)'}):{},onclick:()=>{ st.plat=o; draw(); }},o||'All'); })):null,
     h('span',{style:{flex:1}}),
-    SHARED?null:h('button',{class:'btn sm pri',onclick:()=>{ const r=newRow(db,Object.assign({},status?{[status.id]:(status.options||[])[0]||null}:{},plat&&st.plat?{[plat.id]:st.plat}:{})); openPost(db,r,draw,true); }},ic('plus',15),'New post'));
+    SHARED&&SHARED.perm!=='edit'?null:h('button',{class:'btn sm pri',onclick:()=>{ const r=newRow(db,Object.assign({},status?{[status.id]:(status.options||[])[0]||null}:{},plat&&st.plat?{[plat.id]:st.plat}:{})); openPost(db,r,draw,true); }},ic('plus',15),'New post'));
   let body;
   if(st.mode==='cal') body=calView(db,cols,rs,draw);
   else if(!status) body=boardView(db,cols,rs,draw);
@@ -3711,7 +3713,7 @@ function contentView(db,draw){
             h('div',{class:'chips'},pv?valueView(plat,pv):null,dv?h('span',{class:'cb-date'},fmtShort(dv)):null),
             ro?null:h('div',{class:'cb-mvs'},gi>0?mv(-1,'‹ '+opts[gi-1]):h('span',{}),gi<opts.length-1?mv(1,opts[gi+1]+' ›'):null));
           card.addEventListener('dragstart',e=>{ dragRow=r.id; try{e.dataTransfer.setData('text/plain',r.id);}catch(_){ } }); card.addEventListener('dragend',()=>dragRow=null); return card; }),
-        SHARED?null:h('button',{class:'addrow',style:{borderRadius:'8px'},onclick:()=>{ const r=newRow(db,Object.assign({[status.id]:g},plat&&st.plat?{[plat.id]:st.plat}:{})); openPost(db,r,draw,true); }},ic('plus',15),'Add'));
+        SHARED&&SHARED.perm!=='edit'?null:h('button',{class:'addrow',style:{borderRadius:'8px'},onclick:()=>{ const r=newRow(db,Object.assign({[status.id]:g},plat&&st.plat?{[plat.id]:st.plat}:{})); openPost(db,r,draw,true); }},ic('plus',15),'Add'));
       if(!ro){ col.addEventListener('dragover',e=>{ if(!dragRow) return; e.preventDefault(); col.classList.add('over'); });
         col.addEventListener('dragleave',()=>col.classList.remove('over'));
         col.addEventListener('drop',e=>{ e.preventDefault(); col.classList.remove('over'); const r=S.pages[dragRow]; if(r){ r.props[status.id]=g; touch(r); draw(); } dragRow=null; }); }
@@ -3748,7 +3750,7 @@ function postFields(db,r,redraw,reopen){
       if(c.type==='select') out.push(h('div',{class:'cbp-f'},h('span',{class:'cbp-l'},c.name),selPills(db,r,c,null,redraw,reopen)));
       else { const ed=cellEditor(db,r,c,false); const inp=ed.tagName==='DIV'?ed.querySelector('input'):ed; inp.id='cbp-'+c.id+'-'+r.id; if(c.type==='checkbox'){ ed.append(h('label',{for:inp.id,style:{marginLeft:'8px',fontSize:'14px'}},c.name)); out.push(h('div',{class:'cbp-f'},ed)); } else out.push(h('div',{class:'cbp-f'},h('label',{class:'cbp-l',for:inp.id},c.name),ed)); } });
     out.push(notesField(r,'Notes','Write anything…')); return out; }
-  const lab=(t,col,tab)=>h('div',{class:'cbp-l'},h('span',{},t),SHARED?null:h('button',{onclick:()=>optEditor(db,tab,reopen||redraw)},'Edit '+(tab==='st'?'stages':'platforms')));
+  const lab=(t,col,tab)=>h('div',{class:'cbp-l'},h('span',{},t),SHARED&&SHARED.perm!=='edit'?null:h('button',{onclick:()=>optEditor(db,tab,reopen||redraw)},'Edit '+(tab==='st'?'stages':'platforms')));
   if(status){ const cur=r.props[status.id]||(status.options||[])[0];
     out.push(h('div',{class:'cbp-f'},lab('Stage',status,'st'),h('div',{class:'cbp-stages',role:'group','aria-label':'Stage'},(status.options||[]).map(o=>{ const c=optColor(status,o), on=o===cur;
       return h('button',{class:'cbp-st'+(on?' on':''),'aria-pressed':String(on),style:on?{background:`var(--s-${c})`,color:`var(--c-${c})`,borderColor:`var(--c-${c})`}:{},onclick:()=>set(status,o)},h('span',{class:'cbp-ring',style:{borderColor:`var(--c-${c})`,background:on?`var(--c-${c})`:'transparent'}}),o); })))); }
@@ -3779,7 +3781,7 @@ function postPanel(db,r,draw){
   const st=CB[db.id];
   const close=()=>{ st.sel=null; draw(); };
   let armed=false;
-  const del=SHARED?null:h('button',{class:'btn sm danger',onclick:()=>{ if(!armed){ armed=true; del.textContent='Click again to delete'; return; } st.sel=null; delPost(db,r,draw); }},ic('trash',14),'Delete');
+  const del=SHARED&&SHARED.perm!=='edit'?null:h('button',{class:'btn sm danger',onclick:()=>{ if(!armed){ armed=true; del.textContent='Click again to delete'; return; } st.sel=null; delPost(db,r,draw); }},ic('trash',14),'Delete');
   const p=h('aside',{class:'cb-panel','aria-label':'Post details'},
     h('div',{class:'cbp-top'},h('small',{},db.db.view==='content'?'Post':db.db.view==='studio'?'Booking':(db.icon?db.icon+' ':'')+titleOf(db)),h('button',{class:'cbp-link',onclick:()=>go('page',r.id)},'Open as page ↗'),h('button',{class:'icon-btn','aria-label':'Close',onclick:close},ic('x',16))),
     ...postFields(db,r,draw,null),
@@ -3791,7 +3793,7 @@ function postSheet(db,r,draw,fresh){
   let body, busy=false;
   const redraw=()=>{ if(busy) return; busy=true; try{ draw(); fill(); } finally{ busy=false; } };
   const fill=()=>{ let armed=false;
-    const del=SHARED?null:h('button',{class:'btn danger',onclick:()=>{ if(!armed){ armed=true; del.textContent='Tap again to delete'; return; } closeModal(); delPost(db,r,draw); }},ic('trash',14),'Delete');
+    const del=SHARED&&SHARED.perm!=='edit'?null:h('button',{class:'btn danger',onclick:()=>{ if(!armed){ armed=true; del.textContent='Tap again to delete'; return; } closeModal(); delPost(db,r,draw); }},ic('trash',14),'Delete');
     body.replaceChildren(...postFields(db,r,redraw,()=>{ draw(); postSheet(db,r,draw); }),h('div',{class:'cbp-foot'},h('button',{class:'cbp-link',onclick:()=>{ closeModal(); go('page',r.id); }},'Open as page ↗'),h('span',{class:'sp'}),del,h('button',{class:'btn pri',onclick:()=>{ closeModal(); draw(); }},'Done'))); };
   body=modal(db.db.view==='content'?'Post':db.db.view==='studio'?'Booking':titleOf(db),[]); const m=body.closest('.modal'); m.classList.add('cb-sheet');
   modalEl.addEventListener('pointerdown',e=>{ if(e.target===modalEl) draw(); });
@@ -4496,7 +4498,7 @@ function promptModal(db,row,draw){
     r.title=n; if(pc) r.props[pc.id]=text.value; if(cat) r.props[cat.id]=catV; if(toolI) r.props[tool.id]=toolI.value.trim(); if(linkI) r.props[link.id]=linkI.value.trim();
     touch(r); closeModal(); draw(); sidebarSoon(); toast(row?'Prompt saved':'Prompt added');
   };
-  const del=row&&!SHARED?h('button',{class:'btn sm danger',onclick:()=>{ if(!delArmed){ delArmed=true; del.textContent='Click again to delete'; return; } row.trashed=true; row.trashedAt=Date.now(); save(); closeModal(); draw(); toast('Prompt deleted',{label:'Undo',fn:()=>{ row.trashed=false; save(); draw(); }}); }},ic('trash',14),'Delete'):null;
+  const del=row&&!(SHARED&&SHARED.perm!=='edit')?h('button',{class:'btn sm danger',onclick:()=>{ if(!delArmed){ delArmed=true; del.textContent='Click again to delete'; return; } row.trashed=true; row.trashedAt=Date.now(); save(); closeModal(); draw(); toast('Prompt deleted',{label:'Undo',fn:()=>{ row.trashed=false; save(); draw(); }}); }},ic('trash',14),'Delete'):null;
   const body=[
     h('div',{class:'pm-f'},h('label',{for:'pm-name'},'Name'),name),
     cat?h('div',{class:'pm-f'},h('span',{class:'pm-l'},'Category'),chips):null,
