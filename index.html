@@ -692,7 +692,7 @@ body.td-drag #sb .sb-scroll{overflow:hidden}
 .share-bar>span:nth-child(2){flex:1}
 .share-bar .sb-st{font-size:12.5px;opacity:.85;white-space:nowrap}
 .shared-ro .g,.shared-ro .page-acts,.shared-ro .tbl-addc,.shared-ro .tbl-addr,.shared-ro .dtools,.shared-ro .dres,.shared-ro .ihandle,.shared-ro .lcard .icon-btn,.shared-ro .place .btn,.shared-ro .page-icon{pointer-events:none}
-.shared-mode .pnew,.shared-mode .addrow,.shared-mode .cc .add{display:none}
+.shared-ro .pnew,.shared-ro .addrow,.shared-ro .cc .add{display:none}
 .shared-ro .g{visibility:hidden}
 .shared-ro .pg-edit,.shared-ro .pnew{display:none}
 .blk.conflict{background:color-mix(in srgb,var(--c-amber) 13%,transparent);box-shadow:inset 3px 0 0 var(--c-amber);border-radius:6px;padding-bottom:6px;margin-top:3px;margin-bottom:3px;flex-wrap:wrap}
@@ -803,6 +803,15 @@ button.tt-chip{cursor:pointer}.tt-chip.sel{border-color:currentColor}
 .tt-sw{width:26px;height:26px;border-radius:50%;border:3px solid var(--surface);box-shadow:0 0 0 1px var(--line-2);flex:none;cursor:pointer}
 .tt-catr .icon-btn.armed{color:var(--danger);background:var(--danger-soft)}
 @media (max-width:600px){.tt-row{grid-template-columns:1fr;gap:2px;padding:9px 13px}.tt-d{height:52px;font-size:13px}}
+.pgal.selm .pcard{cursor:pointer;position:relative}.pgal.selm .pband{padding-left:46px}.pgal.selm .pfab,.pgal.selm .pnew{display:none}
+.pck{position:absolute;top:12px;left:12px;z-index:3;width:24px;height:24px;border-radius:7px;border:2px solid var(--line-2);background:var(--surface);display:grid;place-items:center;color:var(--accent-ink)}
+.pcard.sel{box-shadow:0 0 0 2px var(--accent)}.pcard.sel .pck{background:var(--accent);border-color:var(--accent)}
+.pg-selb.on{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.bulkbar{position:sticky;top:8px;z-index:20;display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--ink);color:var(--surface);border-radius:12px;padding:9px 12px;margin:0 0 12px;font-weight:600;font-size:14px}
+.bulkbar .sp{flex:1}
+.bulkbar button{height:34px;border-radius:9px;padding:0 13px;font:600 13.5px var(--f-ui);border:0;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.bulkbar .bk-b{background:rgba(255,255,255,.16);color:var(--surface)}
+.bulkbar .bk-del{background:#D9443A;color:#fff}.bulkbar .bk-del:disabled{opacity:.45;cursor:default}
 .cap{outline:none;font-size:13.5px;color:var(--ink-3);padding:0 2px}
 .cap:empty::before{content:attr(data-ph);color:var(--ink-3);opacity:.7}
 .place{flex:1;display:flex;flex-wrap:wrap;align-items:center;gap:10px;background:var(--surface-2);border-radius:var(--r);padding:14px;color:var(--ink-3);font-size:14px}
@@ -1331,7 +1340,7 @@ const fmtLong=s=>parseYmd(s).toLocaleDateString('en-GB',{weekday:'long',day:'num
 const fmtShort=s=>parseYmd(s).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
 const fmtMonth=s=>parseYmd(s).toLocaleDateString('en-GB',{month:'long',year:'numeric'});
 function ago(t){const s=(Date.now()-t)/1000; if(s<60)return 'just now'; if(s<3600)return Math.floor(s/60)+' min ago'; if(s<86400)return Math.floor(s/3600)+' h ago'; const d=Math.floor(s/86400); return d===1?'yesterday':d+' days ago';}
-const APP_VER='2026.10.27-1';
+const APP_VER='2026.10.27-2';
 // Bwjspace to-dos: plain dots (no done), menu = Edit/Delete, Enter while editing adds a line below. Evvspace sets this to false.
 const TODO_SIMPLE=true;
 // Evvespace only: checkbox to-dos and the Timetable page. The Evvespace build sets this to true.
@@ -4404,16 +4413,27 @@ function galView(db,cols,rs,draw){
     const txt=pc?String(r.props[pc.id]||''):'';
     const tv=tool&&r.props[tool.id];
     const btn=h('button',{class:'pfab','aria-label':'Copy prompt for '+titleOf(r),title:'Copy prompt',onclick:()=>{ if(!txt.trim()){ toast('This card has no prompt yet. Open it to add one.'); return; } copyText(txt); btn.classList.add('ok'); btn.replaceChildren(ic('check',17)); setTimeout(()=>{ btn.classList.remove('ok'); btn.replaceChildren(ic('copy',17)); },1500); }},ic('copy',17));
-    const card=h('article',{class:'pcard'},
+    const card=h('article',{class:'pcard','data-row':r.id},
       h('div',{class:'pband',style:{background:`var(--s-${color})`,color:`var(--c-${color})`}},cv||'No category'),
       h('div',{class:'pbody'},btn,
         h('button',{class:'pctitle',onclick:()=>SHARED&&SHARED.perm!=='edit'?promptRead(r,txt):promptModal(db,r,draw)},(r.icon?r.icon+' ':'')+titleOf(r)),
         txt?h('p',{class:'ptext'},txt):h('p',{class:'ptext empty'},'No prompt yet. Click the name to add one.'),
         tv?h('small',{class:'ptool'},'Tool: '+tv):null));
-    cards.push({el:card,t:titleOf(r).toLowerCase(),c:cv||''}); return card;
+    cards.push({el:card,t:titleOf(r).toLowerCase(),c:cv||'',r}); return card;
   }),h('button',{class:'pnew',onclick:()=>promptModal(db,null,draw)},ic('plus',18),'New prompt'));
   // search by name (capital letters don't matter) and filter by category; filtering happens in place so typing isn't interrupted
   const st=GAL[db.id]||(GAL[db.id]={q:'',c:null});
+  // Select mode: tick several cards and move them to the trash in one go (you, and people with an Edit link)
+  const canSel=!(SHARED&&SHARED.perm!=='edit');
+  if(!st.pick) st.pick=new Set();
+  [...st.pick].forEach(id=>{ if(!rs.some(r=>r.id===id)) st.pick.delete(id); });
+  if(st.sel&&canSel){
+    grid.classList.add('selm');
+    cards.forEach(k=>{ const on=st.pick.has(k.r.id); k.el.classList.toggle('sel',on);
+      const box=h('span',{class:'pck','aria-hidden':'true'},on?ic('check',14):null); k.el.prepend(box);
+      // a tap anywhere on the card ticks it (the card does not open while selecting)
+      k.el.addEventListener('click',e=>{ e.preventDefault(); e.stopPropagation(); st.pick.has(k.r.id)?st.pick.delete(k.r.id):st.pick.add(k.r.id); draw(); },true); });
+  }
   if(st.c&&!(cat&&(cat.options||[]).includes(st.c))) st.c=null;
   const cnt=h('span',{class:'pg-cnt','aria-live':'polite'}), none=h('div',{class:'pg-none',hidden:true});
   const apply=()=>{ const q=st.q.trim().toLowerCase(); let n=0;
@@ -4427,10 +4447,25 @@ function galView(db,cols,rs,draw){
   const drawChips=()=>{ chipRow.replaceChildren(...[null,...((cat&&cat.options)||[])].map(o=>{ const on=st.c===o, c=o?optColor(cat,o):null;
       return h('button',{class:'pm-chip'+(on?' on':''),'aria-pressed':String(on),style:on?(o?{background:`var(--s-${c})`,color:`var(--c-${c})`,borderColor:`var(--c-${c})`}:{background:'var(--ink)',color:'var(--bg)',borderColor:'var(--ink)'}):{},onclick:()=>{ st.c=o; drawChips(); apply(); }},o?h('span',{class:'pg-dot',style:{background:`var(--c-${c})`}}):null,o||'All'); }),cnt); };
   drawChips(); apply();
+  const selBtn=canSel&&rs.length?h('button',{class:'btn sm pg-selb'+(st.sel?' on':''),'aria-pressed':String(!!st.sel),onclick:()=>{ st.sel=!st.sel; st.pick.clear(); st.armed=false; draw(); }},ic('check',14),st.sel?'Done':'Select'):null;
+  let bulk=null;
+  if(st.sel&&canSel){
+    const n=st.pick.size, shown=cards.filter(k=>!k.el.hidden).map(k=>k.r.id);
+    const del=h('button',{class:'bk-del',disabled:n?null:true,onclick:()=>{ if(!n) return; if(!st.armed){ st.armed=true; draw(); return; }
+      const gone=rs.filter(r=>st.pick.has(r.id)); const when=Date.now();
+      gone.forEach(r=>{ r.trashed=true; r.trashedAt=when; touch(r); });
+      st.pick.clear(); st.armed=false; st.sel=false; sidebarSoon(); draw();
+      toast(gone.length===1?'1 prompt moved to trash':gone.length+' prompts moved to trash',{label:'Undo',fn:()=>{ gone.forEach(r=>{ r.trashed=false; r.trashedAt=null; touch(r); }); sidebarSoon(); draw(); }}); }},
+      ic('trash',14),st.armed?(n===1?'Tap again to delete 1':'Tap again to delete '+n):'Delete');
+    bulk=h('div',{class:'bulkbar',role:'toolbar','aria-label':'Selected prompts'},
+      h('span',{},n?n+' selected':'Tap cards to select'),h('span',{class:'sp'}),
+      h('button',{class:'bk-b',onclick:()=>{ const all=shown.length&&shown.every(id=>st.pick.has(id)); if(all) shown.forEach(id=>st.pick.delete(id)); else shown.forEach(id=>st.pick.add(id)); st.armed=false; draw(); }},shown.length&&shown.every(id=>st.pick.has(id))?'Select none':'Select all'),
+      h('button',{class:'bk-b',onclick:()=>{ st.sel=false; st.pick.clear(); st.armed=false; draw(); }},'Cancel'),del);
+  }
   const top=h('div',{class:'pg-top'},
-    h('div',{class:'pg-srow'},h('div',{class:'pg-sbox'},ic('search',17),q),sortBtn,cat?h('button',{class:'btn sm pg-edit',onclick:()=>catEditor(db,cat,draw)},ic('pen',14),'Edit categories'):null),
+    h('div',{class:'pg-srow'},h('div',{class:'pg-sbox'},ic('search',17),q),selBtn,sortBtn,cat?h('button',{class:'btn sm pg-edit',onclick:()=>catEditor(db,cat,draw)},ic('pen',14),'Edit categories'):null),
     cat&&(cat.options||[]).length?chipRow:h('div',{class:'pg-chips'},cnt));
-  return h('div',{},top,none,grid);
+  return h('div',{},top,bulk,none,grid);
 }
 const GAL={};
 /* rename categories, change their colour, add or delete them */
